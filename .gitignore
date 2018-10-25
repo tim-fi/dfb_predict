@@ -116,3 +116,5 @@ dmypy.json
 # Pipenv
 *.lock
 
+# Sublime Text
+*.sublime-workspace
