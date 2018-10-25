@@ -1,0 +1,716 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"grou",
+				"group_list"
+			],
+			[
+				"sea",
+				"season_ids_to_enable"
+			],
+			[
+				"season_ids_t",
+				"season_ids_to_disable"
+			],
+			[
+				"_tog",
+				"_toggle_season_button_text"
+			],
+			[
+				"_to",
+				"_toggle_season_button_text"
+			],
+			[
+				"_toggle",
+				"_toggle_season_button"
+			],
+			[
+				"_togg",
+				"_toggle_season_button"
+			],
+			[
+				"_en",
+				"_enabled_team_list"
+			],
+			[
+				"qu",
+				"query_generator"
+			],
+			[
+				"se",
+				"seasons"
+			],
+			[
+				"en",
+				"enabled"
+			],
+			[
+				"guest",
+				"guest_matches"
+			],
+			[
+				"ena",
+				"enabled_seasons"
+			],
+			[
+				"hy",
+				"hybrid_property"
+			],
+			[
+				"pro",
+				"processed_seasons\tstatement"
+			],
+			[
+				"seas",
+				"season\tstatement"
+			],
+			[
+				"get",
+				"get_session"
+			],
+			[
+				"_dis",
+				"_disabled_seasons_list\tstatement"
+			],
+			[
+				"_br",
+				"_browse_seasons_frame\tstatement"
+			],
+			[
+				"La",
+				"Labelframe\tclass"
+			],
+			[
+				"is",
+				"isinstance\tfunction"
+			],
+			[
+				"S",
+				"Season"
+			],
+			[
+				"s",
+				"season\tmodule"
+			],
+			[
+				"__",
+				"__tablename__"
+			],
+			[
+				"It",
+				"Integer\tclass"
+			],
+			[
+				"me",
+				"metadata"
+			],
+			[
+				"as",
+				"assosiation_name\tstatement"
+			],
+			[
+				"__init_",
+				"__init_subclass__\tfunction"
+			],
+			[
+				"hal",
+				"half_time_result"
+			],
+			[
+				"end",
+				"end_result"
+			],
+			[
+				"P",
+				"PoissonPredictor"
+			],
+			[
+				"dat",
+				"dateutil\tmodule"
+			],
+			[
+				"p",
+				"pipelines"
+			],
+			[
+				"get_",
+				"get_multiple_data"
+			],
+			[
+				"cre",
+				"create_multiple\tfunction"
+			],
+			[
+				"crea",
+				"create"
+			],
+			[
+				"model",
+				"model_pipelines\tmodule"
+			],
+			[
+				"In",
+				"Integer"
+			],
+			[
+				"_",
+				"__all__\tstatement"
+			],
+			[
+				"c",
+				"core\tmodule"
+			],
+			[
+				"Json",
+				"JSONEncodedDict"
+			],
+			[
+				"for",
+				"format_results\tfunction"
+			],
+			[
+				"F",
+				"Frame\tclass"
+			],
+			[
+				"Data",
+				"DataTab"
+			],
+			[
+				"LE",
+				"LEGAL_YEARS\tstatement"
+			],
+			[
+				"sc",
+				"scrollable_list\tmodule"
+			],
+			[
+				"Sc",
+				"ScrollableList"
+			],
+			[
+				"goa",
+				"goal_model"
+			],
+			[
+				"ex",
+				"extracted_args\tstatement"
+			],
+			[
+				"sess",
+				"session"
+			],
+			[
+				"ye",
+				"second_year"
+			],
+			[
+				"_fil",
+				"_fill_year_list\tfunction"
+			],
+			[
+				"exi",
+				"exisiting_seasons\tstatement"
+			],
+			[
+				"_down",
+				"_downloaded_teams_list"
+			],
+			[
+				"_dow",
+				"_downloaded_year_list\tstatement"
+			],
+			[
+				"in",
+				"insert\tfunction"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "dfb_predict.sublime-project",
+			"settings":
+			{
+				"buffer_size": 883,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/__init__.py",
+			"settings":
+			{
+				"buffer_size": 16,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "run current file",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Delete DB",
+					""
+				],
+				[
+					"Run GUI",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Run GUI",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Anaconda Python Builder",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"Run gui",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Run gui",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Anaconda Python Builder",
+					""
+				],
+				[
+					"run current file",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"run current file",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Run gui",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Run gui",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"menu",
+				"View: Toggle Menu"
+			],
+			[
+				"git",
+				"Git: Commit history"
+			],
+			[
+				"porject",
+				"Project Manager"
+			],
+			[
+				"project",
+				"Project Manager"
+			],
+			[
+				"run",
+				"Build With: Run gui"
+			],
+			[
+				"build",
+				"Build: New Build System"
+			],
+			[
+				"buil",
+				"Build: New Build System"
+			],
+			[
+				"pref",
+				"Preferences: Settings"
+			],
+			[
+				"ins",
+				"Package Control: Install Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 124.0,
+		"history":
+		[
+			"import socket; socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((\"localhost\", 49990))",
+			"import urllib.request,os,hashlib; h = '6f4c264a24d933ce70df5dedcf1dcaee' + 'ebe013ee18cced0ef93d5f746d80ef60'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by) "
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+	],
+	"file_history":
+	[
+		"/home/timfi/dev/python/official_dfb_predict/src/__init__.py",
+		"/home/timfi/dev/python/official_dfb_predict/option_assement.md",
+		"/home/timfi/dev/python/official_dfb_predict/.vscode/settings.json",
+		"/home/timfi/dev/python/official_dfb_predict/.gitignore",
+		"/home/timfi/dev/python/official_dfb_predict/dfb_predict.sublime-project",
+		"/home/timfi/dev/python/dfb_predict/dfb_predict.sublime-project",
+		"/home/timfi/dev/python/dfb_predict/src/db/core.py",
+		"/home/timfi/dev/python/dfb_predict/src/acquisition/pipeline.py",
+		"/home/timfi/dev/python/official_dfb_predict/README.md",
+		"/home/timfi/dev/python/dfb_predict/src/acquisition/model_pipelines.py",
+		"/home/timfi/dev/python/dfb_predict/src/acquisition/download.py",
+		"/home/timfi/dev/python/dfb_predict/src/ui/tabs/data.py",
+		"/G/files/dev/python/dfb_predict/src/db/core.py",
+		"/G/files/dev/python/dfb_predict/src/processing/poisson.py",
+		"/G/files/dev/python/dfb_predict/src/ui/tabs/prediction.py",
+		"/G/files/dev/python/dfb_predict/src/ui/tabs/data.py",
+		"/G/files/dev/python/dfb_predict/src/ui/widgets/model_list.py",
+		"/G/files/dev/python/dfb_predict/src/cli.py",
+		"/G/files/dev/python/dfb_predict/src/db/models/team.py",
+		"/C/Users/timfi/.virtualenvs/dfb_predict-lLgq7tm3/Lib/site-packages/sqlalchemy/orm/relationships.py",
+		"/G/files/dev/python/dfb_predict/teams2017.txt",
+		"/G/files/dev/python/dfb_predict/teams2016.txt",
+		"/G/files/dev/python/dfb_predict/src/acquisition/pipeline.py",
+		"/G/files/dev/python/dfb_predict/dfb_predict.sublime-project",
+		"/G/files/dev/python/dfb_predict/Pipfile",
+		"/G/files/dev/python/dfb_predict/src/acquisition/model_pipelines.py",
+		"/G/files/dev/python/dfb_predict/src/acquisition/__init__.py",
+		"/G/files/dev/python/dfb_predict/src/processing/base.py",
+		"/G/files/dev/python/dfb_predict/src/acquisition/download.py",
+		"/G/files/dev/python/dfb_predict/src/db/models/season.py",
+		"/G/files/dev/python/dfb_predict/src/db/models/match.py",
+		"/G/files/dev/python/dfb_predict/src/db/models/result.py",
+		"/G/files/dev/python/dfb_learn/src/db/models/match.py",
+		"/G/files/dev/python/dfb_learn/dfb_predict.sublime-project",
+		"/G/files/dev/python/dfb_learn/gui.sublime-build",
+		"/G/files/dev/python/dfb_learn/src/cli.py",
+		"/G/files/dev/python/dfb_learn/src/processing/poisson.py",
+		"/G/files/dev/python/dfb_learn/src/ui/app.py",
+		"/G/files/dev/python/dfb_learn/src/ui/tabs/prediction.py",
+		"/G/files/dev/python/dfb_learn/src/ui/tabs/data.py",
+		"/G/files/dev/python/dfb_learn/readme.md",
+		"/G/files/dev/python/dfb_learn/src/db/custom_fields.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/scrollable_list.py",
+		"/G/files/dev/python/dfb_learn/src/db/models/team.py",
+		"/G/files/dev/python/dfb_learn/src/db/models/season.py",
+		"/G/files/dev/python/dfb_learn/src/db/models/result.py",
+		"/G/files/dev/python/dfb_learn/src/db/core.py",
+		"/G/files/dev/python/dfb_learn/teams.txt",
+		"/G/files/dev/python/dfb_learn/src/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/acquisition/model_pipelines.py",
+		"/G/files/dev/python/dfb_learn/src/_processing.py",
+		"/G/files/dev/python/dfb_learn/src/processing/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/processing/base.py",
+		"/G/files/dev/python/dfb_learn/src/acquisition/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/_acqusition.py",
+		"/G/files/dev/python/dfb_learn/src/acquisition/download.py",
+		"/G/files/dev/python/dfb_learn/src/acquisition/pipeline.py",
+		"/G/files/dev/python/dfb_learn/src/db/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/db/models/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/_db.py",
+		"/G/files/dev/python/dfb_learn/src/ui/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/_ui.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/frame.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/labeled_progressbar.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/model_list.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/plot.py",
+		"/G/files/dev/python/dfb_learn/src/ui/widgets/select_box.py",
+		"/G/files/dev/python/dfb_learn/src/ui/tabs/__init__.py",
+		"/G/files/dev/python/dfb_learn/src/db.py",
+		"/G/files/dev/python/dfb_learn/src/acqusition.py",
+		"/G/files/dev/python/dfb_learn/src/processing.py",
+		"/G/files/dev/python/dfb_learn/Pipfile",
+		"/G/files/dev/python/dfb_learn/src/__main__.py"
+	],
+	"find":
+	{
+		"height": 24.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "dfb_predict.sublime-project",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 883,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								804,
+								804
+							]
+						],
+						"settings":
+						{
+							"git_gutter_is_enabled": true,
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/__init__.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 16,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								16,
+								16
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": ".",
+									"selector": "source.python - string - comment - constant.numeric"
+								},
+								{
+									"characters": ".",
+									"selector": "source.python - string - constant.numeric"
+								}
+							],
+							"git_gutter_is_enabled": true,
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 24.0
+	},
+	"input":
+	{
+		"height": 34.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": false,
+	"output.exec":
+	{
+		"height": 391.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "dfb_predict.sublime-project",
+	"replace":
+	{
+		"height": 44.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 186.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
