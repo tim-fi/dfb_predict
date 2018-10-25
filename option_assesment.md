@@ -67,7 +67,7 @@ All the library choices are related to our language of choice for this project: 
     * [Las Vegas algorithm](https://en.wikipedia.org/wiki/Las_Vegas_algorithm)
     * [Poisson regression model](https://dashee87.github.io/football/python/predicting-football-results-with-statistical-modelling/)
     * [Dixon-Coles model](https://dashee87.github.io/football/python/predicting-football-results-with-statistical-modelling-dixon-coles-and-time-weighting/)
-	* [True Skill]()
+	* [True Skill](https://en.wikipedia.org/wiki/TrueSkill)
 
 ### visualisation
 1. native ui
