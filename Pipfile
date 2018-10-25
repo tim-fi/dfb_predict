@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+pandas = "*"
+sqlalchemy = "*"
+sqlalchemy-utils = "*"
+requests = "*"
+python-dateutil = "*"
+scipy = "*"
+statsmodels = "*"
+click = "*"
+matplotlib = "*"
+
+[dev-packages]
+"flake8" = "*"
+mypy = "*"
+
+[requires]
+python_version = "3.7"
