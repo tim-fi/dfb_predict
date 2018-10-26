@@ -10,7 +10,7 @@ __all__ = (
 )
 
 
-class Season(DB.Model):
+class Season(DB.Model):  # type : ignore
     __tablename__ = "seasons"
 
     year = Column(Integer)

@@ -1,7 +1,8 @@
 from contextlib import contextmanager
+from typing import ContextManager
 
 from sqlalchemy import create_engine, Column, Integer
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, Session
 from sqlalchemy.ext.declarative import as_declarative
 
 
@@ -29,10 +30,10 @@ class _DB(metaclass=_DB_Meta):
     class Model:
         id = Column(Integer, primary_key=True, unique=True)
 
-    def __init__(self, engine_descriptor):
+    def __init__(self, engine_descriptor: str) -> None:
         self.configure(engine_descriptor)
 
-    def configure(self, engine_descriptor):
+    def configure(self, engine_descriptor: str) -> None:
         if hasattr(self, "_engine"):
             del self._ScopedSession
             del self._Session
@@ -41,15 +42,15 @@ class _DB(metaclass=_DB_Meta):
         self._Session = sessionmaker(bind=self._engine)
         self._ScopedSession = scoped_session(self._Session)
 
-    def create_tables(self):
+    def create_tables(self) -> None:
         self.drop_tables()
         self.Model.metadata.create_all(self._engine)
 
-    def drop_tables(self):
+    def drop_tables(self) -> None:
         self.Model.metadata.drop_all(self._engine)
 
     @contextmanager
-    def get_session(self, *args, scoped=False, **kwargs):
+    def get_session(self, *args, scoped: bool = False, **kwargs) -> ContextManager[Session]:
         session = self._Session(*args, **kwargs) if not scoped else self._ScopedSession(*args, **kwargs)
         try:
             yield session
