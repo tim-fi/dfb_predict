@@ -43,6 +43,7 @@ def download_matches(session, years, league=None):
         url = base_url.format(league=league or "bl1", year=year)
 
         response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
 
         for match in pipeline.create_multiple(Match, data, session):

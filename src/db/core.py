@@ -23,7 +23,7 @@ class _DB_Meta(type):
     _instance = {}
 
     def __call__(cls, *args, **kwargs):
-        if _DB_Meta._instance is not None:
+        if cls in _DB_Meta._instance:
             if len(args) + len(kwargs) > 0:
                 raise RuntimeError(f"Tried to re-instantiate {cls}...")
             else:

@@ -23,7 +23,7 @@ class Pipeline:
     def generate_kwargs(self, model, data, session):
         return {
             key: transformation(self, data, session)
-            for key, transformation in self._transformations.items()
+            for key, transformation in self._transformations[model].items()
         }
 
     def create_multiple(self, model, data, session):
@@ -92,7 +92,7 @@ class Transformations:
 
     @Transformation.from_func
     def Create(pipeline, data, session, model):
-        instance = pipeline.create(model, pipeline, data, session)
+        instance = pipeline.create(model, data, session)
         session.add(instance)
         session.commit()
         return instance

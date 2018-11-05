@@ -2,7 +2,7 @@ import click
 
 from .db import DB
 from .db.models import *
-from .acqusition import download_matches
+from .acquisition import download_matches
 
 
 @click.group()
@@ -34,12 +34,11 @@ def download(years, drop):
         elif len(skipped_years) > 0:
             print("Skipping ", ", ".join(map(str, skipped_years)), "as they are already present.")
 
-        progress = click.progressbar(
+        with click.progressbar(
             download_matches(session, years_to_download),
             length=len(years_to_download) * 306,
             label="downloading matches...",
             show_eta=True, show_percent=True, show_pos=True
-        )
-
-        session.add_all(list(progress))
+        ) as result:
+            session.add_all(list(result))
     print("done")
