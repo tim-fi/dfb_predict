@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
-from ..core import DB
+from ..core import Model
 from .association_tables import team_season_association_table
 
 
@@ -10,7 +10,7 @@ __all__ = (
 )
 
 
-class Team(DB.Model):  # type: ignore
+class Team(Model):
     __tablename__ = "teams"
 
     name = Column(String)

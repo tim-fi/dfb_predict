@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from ..core import DB
+from ..core import Model
 
 
 __all__ = (
@@ -9,7 +9,7 @@ __all__ = (
 )
 
 
-class Match(DB.Model):  # type: ignore
+class Match(Model):
     __tablename__ = "matches"
 
     date = Column(DateTime)
@@ -29,7 +29,7 @@ class Match(DB.Model):  # type: ignore
     end_result_id = Column(Integer, ForeignKey("results.id"))
     end_result = relationship("Result", primaryjoin="Match.end_result_id == Result.id")
 
-    results = relationship("Result", backref="match", primaryjoin="Match.end_result_id == Result.id | Match.half_time_result_id == Result.id")
+    results = relationship("Result", backref="match", primaryjoin="Match.end_result_id == Result.id or Match.half_time_result_id == Result.id")
 
     def __repr__(self) -> str:
         return f"<Match(datetime={self.date}, host={str(self.host)}, guest={str(self.guest)}, end_result={str(self.end_result)})>"

@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, Boolean
 from sqlalchemy.orm import relationship
 
-from ..core import DB
-from .associtation_tables import team_season_association_table
+from ..core import Model
+from .association_tables import team_season_association_table
 
 
 __all__ = (
@@ -10,9 +10,10 @@ __all__ = (
 )
 
 
-class Season(DB.Model):  # type : ignore
+class Season(Model):
     __tablename__ = "seasons"
 
     year = Column(Integer)
+    enabled = Column(Boolean, default=True)
 
     teams = relationship("Team", secondary=team_season_association_table, back_populates="seasons")

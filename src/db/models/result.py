@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Boolean
 
-from ..core import DB
+from ..core import Model
 
 
 __all__ = (
@@ -8,7 +8,7 @@ __all__ = (
 )
 
 
-class Result(DB.Model):  # type: ignore
+class Result(Model):
     __tablename__ = "results"
 
     host_points = Column(Integer)
