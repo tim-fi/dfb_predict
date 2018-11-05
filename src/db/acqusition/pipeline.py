@@ -1,7 +1,14 @@
 from dateutil.parser import parse as parse_datetime
+import requests
 
-from ..db.models import Match, Team, Result
+from ..db.models import Match, Team, Result, Season
 from .core import Pipeline, Transformations
+
+
+__all__ = (
+    "pipeline",
+    "download_matches"
+)
 
 
 pipeline = Pipeline({
@@ -25,3 +32,26 @@ pipeline = Pipeline({
     }
 })
 
+
+base_url = "https://www.openligadb.de/api/getmatchdata/{league}/{year}"
+
+
+def download_matches(session, years, league=None):
+    for year in years:
+        season = Season(year=year)
+
+        url = base_url.format(league=league or "bl1", year=year)
+
+        response = requests.get(url)
+        data = response.json()
+
+        for match in pipeline.create_multiple(Match, data, session):
+            match.season = season
+
+            if season not in match.host.seasons:
+                match.host.seasons.append(season)
+
+            if season not in match.guest.seasons:
+                match.guest.seasons.append(season)
+
+            yield match

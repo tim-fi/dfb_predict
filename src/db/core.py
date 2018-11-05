@@ -69,4 +69,3 @@ class _DB(metaclass=_DB_Meta):
 project_dir = os.getcwd()
 database_path = os.path.join(project_dir, "data.db")
 DB = _DB(f"sqlite:///{database_path}")
-
