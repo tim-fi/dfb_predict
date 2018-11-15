@@ -1,8 +1,13 @@
+from typing import List, Optional, Generator
+
 from dateutil.parser import parse as parse_datetime
 import requests
+from sqlalchemy.orm import Session
 
+from ..db import Model
 from ..db.models import Match, Team, Result, Season
-from .core import Pipeline, Transformations
+from .core import Pipeline
+from .tansformations import Get, Custom, Filter, GetOrCreate, Create
 
 
 __all__ = (
@@ -11,24 +16,24 @@ __all__ = (
 )
 
 
-pipeline = Pipeline({
+pipeline: Pipeline[Model] = Pipeline({
     Team: {
-        "id": Transformations.Get("TeamId"),
-        "name": Transformations.Get("TeamName")
+        "id": Get("TeamId"),
+        "name": Get("TeamName")
     },
     Result: {
-        "id": Transformations.Get("ResultID"),
-        "host_points": Transformations.Get("PointsTeam1"),
-        "guest_points": Transformations.Get("PointsTeam2"),
-        "is_end": Transformations.Get("ResultName") | Transformations.Custom(lambda data: "end" in data.lower())
+        "id": Get("ResultID"),
+        "host_points": Get("PointsTeam1"),
+        "guest_points": Get("PointsTeam2"),
+        "is_end": Get("ResultName") | Custom(lambda data: "end" in data.lower())
     },
     Match: {
-        "id": Transformations.Get("MatchID"),
-        "date": Transformations.Get("MatchDateTime") | Transformations.Custom(lambda data: parse_datetime(data)),
-        "host": Transformations.Get("Team1") | Transformations.GetOrCreate(Team),
-        "guest": Transformations.Get("Team2") | Transformations.GetOrCreate(Team),
-        "half_time_result": Transformations.Get("MatchResults") | Transformations.Filter(lambda item: item["ResultOrderID"] == 1) | Transformations.Get(0) | Transformations.Create(Result),
-        "end_result": Transformations.Get("MatchResults") | Transformations.Filter(lambda item: item["ResultOrderID"] == 2) | Transformations.Get(0) | Transformations.Create(Result)
+        "id": Get("MatchID"),
+        "date": Get("MatchDateTime") | Custom(lambda data: parse_datetime(data)),
+        "host": Get("Team1") | GetOrCreate(Team),
+        "guest": Get("Team2") | GetOrCreate(Team),
+        "half_time_result": Get("MatchResults") | Filter(lambda item: item["ResultOrderID"] == 1) | Get(0) | Create(Result),
+        "end_result": Get("MatchResults") | Filter(lambda item: item["ResultOrderID"] == 2) | Get(0) | Create(Result)
     }
 })
 
@@ -36,9 +41,16 @@ pipeline = Pipeline({
 base_url = "https://www.openligadb.de/api/getmatchdata/{league}/{year}"
 
 
-def download_matches(session, years, league=None):
+def download_matches(session: Session, years: List[int], league: Optional[str] = None) -> Generator[Match, None, None]:
+    """Download and process all matches from the given years
+
+    :param session: DB session to interact with
+    :param years: list of year to download matches of
+    :param league: key od league to download matches of (default value = None)
+
+    """
     for year in years:
-        season = Season(year=year)
+        season = Season(year=year)  # type: ignore
 
         url = base_url.format(league=league or "bl1", year=year)
 
@@ -46,7 +58,7 @@ def download_matches(session, years, league=None):
         response.raise_for_status()
         data = response.json()
 
-        for match in pipeline.create_multiple(Match, data, session):
+        for match in pipeline.create_multiple(Match, data, session):  # type: ignore
             match.season = season
 
             if season not in match.host.seasons:
