@@ -1,4 +1,4 @@
-from typing import List, Optional, Generator
+from typing import List, Optional, Generator, cast
 
 from dateutil.parser import parse as parse_datetime
 import requests
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..db import Model
 from ..db.models import Match, Team, Result, Season
 from .core import Pipeline
-from .tansformations import Get, Custom, Filter, GetOrCreate, Create
+from .transformations import Get, Custom, Filter, GetOrCreate, Create
 
 
 __all__ = (
@@ -59,6 +59,7 @@ def download_matches(session: Session, years: List[int], league: Optional[str] =
         data = response.json()
 
         for match in pipeline.create_multiple(Match, data, session):  # type: ignore
+            match = cast(Match, match)  # this cast is required for "proper typing2...i.e. typevars are annoying
             match.season = season
 
             if season not in match.host.seasons:

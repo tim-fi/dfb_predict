@@ -1,10 +1,12 @@
-import os
+from __future__ import annotations
 
+import os
 from contextlib import contextmanager
-from typing import Generator, Type
+from typing import Generator, Type, ClassVar, Dict
 
 from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.orm import sessionmaker, scoped_session, Session
+from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.declarative import as_declarative
 
 
@@ -20,7 +22,7 @@ class Model:
 
 
 class _DB_Meta(type):
-    _instance = {}
+    _instance: ClassVar[Dict[Type[_DB], _DB]] = {}  # noqa: F821
 
     def __call__(cls, *args, **kwargs):
         if cls in _DB_Meta._instance:
@@ -42,7 +44,8 @@ class _DB(metaclass=_DB_Meta):
             del self._ScopedSession
             del self._Session
             del self._engine
-        self._engine = create_engine(engine_descriptor)
+        self._engine: Engine = create_engine(engine_descriptor)
+        print(self._engine.__class__)
         self._Session: Type[Session] = sessionmaker(bind=self._engine)
         self._ScopedSession: Type[Session] = scoped_session(self._Session)
 
@@ -57,7 +60,10 @@ class _DB(metaclass=_DB_Meta):
         session = self._Session(*args, **kwargs) if not scoped else self._ScopedSession(*args, **kwargs)
         try:
             yield session
-        except:
+        except:  # noqa: E722
+            # here the bare except is used simply to intercept exceptions, to rollback the changes that may have
+            # happened in the session before closing it.
+            # This is actually the recommended way to do this in the SQLAlchemy docs!
             session.rollback()
             raise
         else:

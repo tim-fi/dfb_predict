@@ -21,12 +21,12 @@ M = TypeVar("M")
 
 
 @overload
-def Get(pipeline, data: List[T], session, key: int) -> T:
+def Get(pipeline, data: Dict[K, T], session, key: K) -> T:
     ...
 
 
 @overload  # noqa: F811
-def Get(pipeline, data: Dict[K, T], session, key: K) -> T:
+def Get(pipeline, data: List[T], session, key: int) -> T:
     ...
 
 
