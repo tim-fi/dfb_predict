@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+pandas = "*"
+sqlalchemy = "*"
+sqlalchemy-utils = "*"
+requests = "*"
+python-dateutil = "*"
+scipy = "*"
+statsmodels = "*"
+click = "*"
+matplotlib = "*"
+
+[dev-packages]
+"flake8" = "*"
+mypy = "*"
+
+[scripts]
+tests = "python -m unittest discover -v"
+db = "python -m src db"
+download = "python -m src db download"
+
+[requires]
+python_version = "3.7"

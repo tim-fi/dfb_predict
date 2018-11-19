@@ -1,0 +1,45 @@
+{
+	"build_systems":
+	[
+		{
+			"cmd":
+			[
+				"pipenv",
+				"run",
+				"python",
+				"$file"
+			],
+			"name": "run current file",
+			"selector": "source.python",
+			"working_dir": "${project_path:${folder}}"
+		},
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "Anaconda Python Builder",
+			"selector": "source.python",
+			"shell_cmd": "\"python\" -u \"$file\""
+		}
+	],
+	"folders":
+	[
+		{
+			"name": "Source",
+			"path": "src"
+		},
+		{
+			"file_exclude_patterns":
+			[
+				".gitignore",
+				"*.lock",
+				"*.sublime-project"
+			],
+			"folder_exclude_patterns":
+			[
+				".venv",
+				"src"
+			],
+			"name": "Config",
+			"path": "."
+		}
+	]
+}
