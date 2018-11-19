@@ -1,4 +1,4 @@
-from typing import List, Optional, Generator, cast
+from typing import List, Optional, Generator, cast, Tuple
 
 from dateutil.parser import parse as parse_datetime
 import requests
@@ -12,7 +12,8 @@ from .transformations import Get, Custom, Filter, GetOrCreate, Create
 
 __all__ = (
     "pipeline",
-    "download_matches"
+    "download_matches",
+    "clean_download_list"
 )
 
 
@@ -36,6 +37,21 @@ pipeline: Pipeline[Model] = Pipeline({
         "end_result": Get("MatchResults") | Filter(lambda item: item["ResultOrderID"] == 2) | Get(0) | Create(Result)
     }
 })
+
+
+def clean_download_list(session: Session, years: List[int]) -> Tuple[List[int], List[int]]:
+    """Check if a given list of years for possible duplicates with existing years.
+
+    :param session: DB session to interact with
+    :param years: years to check for duplicates
+    :return: (unique years, duplicates years)
+    
+    """
+    existing_years = [year for (year,) in session.query(Season.year).all()]
+    skipped_years = [year for year in years if year in existing_years]
+    years_to_download = [year for year in years if year not in existing_years]
+
+    return years_to_download, skipped_years
 
 
 base_url = "https://www.openligadb.de/api/getmatchdata/{league}/{year}"

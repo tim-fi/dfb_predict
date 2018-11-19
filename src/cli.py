@@ -1,8 +1,8 @@
 import click
 
 from .db import DB
-from .db.models import *
-from .acquisition import download_matches
+from .db.models import *  # noqa: F401
+from .acquisition import download_matches, clean_download_list
 
 
 @click.group()
@@ -25,9 +25,7 @@ def download(years, drop):
         DB.create_tables()
 
     with DB.get_session() as session:
-        existing_years = [year for (year,) in session.query(Season.year).all()]
-        skipped_years = [year for year in years if year in existing_years]
-        years_to_download = [year for year in years if year not in existing_years]
+        years_to_download, skipped_years = clean_download_list(session, years)
 
         if len(years_to_download) == 0:
             print("All seasons already present, none will be downloaded.")

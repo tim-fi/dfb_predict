@@ -22,16 +22,13 @@ class Model:
 
 
 class _DB_Meta(type):
-    _instance: ClassVar[Dict[Type[_DB], _DB]] = {}  # noqa: F821
+    _instances: ClassVar[Dict[str, _DB]] = {}  # noqa: F821
 
-    def __call__(cls, *args, **kwargs):
-        if cls in _DB_Meta._instance:
-            if len(args) + len(kwargs) > 0:
-                raise RuntimeError(f"Tried to re-instantiate {cls}...")
-            else:
-                return _DB_Meta._instance[cls]
+    def __call__(cls, engine_descriptor=None):
+        if engine_descriptor in _DB_Meta._instances:
+            return _DB_Meta._instances[engine_descriptor]
         else:
-            _DB_Meta._instance[cls] = instance = super().__call__(*args, **kwargs)
+            _DB_Meta._instances[engine_descriptor] = instance = super().__call__(engine_descriptor)
             return instance
 
 
@@ -45,7 +42,6 @@ class _DB(metaclass=_DB_Meta):
             del self._Session
             del self._engine
         self._engine: Engine = create_engine(engine_descriptor)
-        print(self._engine.__class__)
         self._Session: Type[Session] = sessionmaker(bind=self._engine)
         self._ScopedSession: Type[Session] = scoped_session(self._Session)
 

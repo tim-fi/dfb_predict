@@ -20,6 +20,7 @@ matplotlib = "*"
 mypy = "*"
 
 [scripts]
+tests = "python -m unittest discover -v"
 db = "python -m src db"
 download = "python -m src db download"
 
