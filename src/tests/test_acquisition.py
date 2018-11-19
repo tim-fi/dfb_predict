@@ -41,23 +41,35 @@ class TestAcquisition(unittest.TestCase):
 
         :param match: object to check
         :param year: year to use for comparisons (default value = None)
-        
+
         """
         assert isinstance(match, Match)
-        assert isinstance(match.season, Season)
-        if year is not None:
-            assert match.season.year == year
+        self._test_group(match.group, year)
         self._test_team(match.host, year)
         self._test_team(match.guest, year)
         assert isinstance(match.half_time_result, Result)
         assert isinstance(match.end_result, Result)
+
+    def _test_group(self, group, year=None):
+        """Check a given group for validity
+
+        :param group: object to check
+        :param year: year to use for comparisons (default value = None)
+
+        """
+        assert isinstance(group, Group)
+        assert isinstance(group.id, int)
+        assert 1 <= group.order_id <= 34
+        assert isinstance(group.season, Season)
+        if year is not None:
+            assert group.season.year == year
 
     def _test_team(self, team, year=None):
         """Check a given team for validity
 
         :param match: object to check
         :param year: year to use for comparisons (default value = None)
-        
+
         """
         assert isinstance(team, Team)
         assert isinstance(team.seasons, list)

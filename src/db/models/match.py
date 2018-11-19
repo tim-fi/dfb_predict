@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from ..core import Model
@@ -14,8 +14,10 @@ class Match(Model):
 
     date = Column(DateTime)
 
-    season_id = Column(Integer, ForeignKey("seasons.id"))
-    season = relationship("Season", backref="matches")
+    is_finished = Column(Boolean)
+
+    group_id = Column(Integer, ForeignKey("groups.id"))
+    group = relationship("Group", backref="matches")
 
     host_id = Column(Integer, ForeignKey("teams.id"))
     host = relationship("Team", backref="hosted_matches", primaryjoin="Match.host_id == Team.id")
@@ -35,4 +37,4 @@ class Match(Model):
         return f"<Match(datetime={self.date}, host={str(self.host)}, guest={str(self.guest)}, end_result={str(self.end_result)})>"
 
     def __str__(self) -> str:
-        return f"{self.date} -- {str(self.host)} vs. {str(self.guest)} -- {str(self.end_result)}"
+        return f"{self.date} -- {repr(str(self.group))} -- {str(self.host)} vs. {str(self.guest)} -- {str(self.end_result) if self.is_finished else 'not finished'}"

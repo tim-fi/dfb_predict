@@ -17,3 +17,9 @@ class Season(Model):
     enabled = Column(Boolean, default=True)
 
     teams = relationship("Team", secondary=team_season_association_table, back_populates="seasons")
+
+    def __repr__(self):
+        return f"<Season(year={self.year})>"
+
+    def __str__(self):
+        return f"{self.year}/{(self.year % 100) + 1}"

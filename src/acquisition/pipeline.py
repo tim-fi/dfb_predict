@@ -5,7 +5,7 @@ import requests
 from sqlalchemy.orm import Session
 
 from ..db import Model
-from ..db.models import Match, Team, Result, Season
+from ..db.models import Match, Team, Result, Season, Group
 from .core import Pipeline
 from .transformations import Get, Custom, Filter, GetOrCreate, Create
 
@@ -28,9 +28,15 @@ pipeline: Pipeline[Model] = Pipeline({
         "guest_points": Get("PointsTeam2"),
         "is_end": Get("ResultName") | Custom(lambda data: "end" in data.lower())
     },
+    Group: {
+        "id": Get("GroupID"),
+        "order_id": Get("GroupOrderID")
+    },
     Match: {
         "id": Get("MatchID"),
         "date": Get("MatchDateTime") | Custom(lambda data: parse_datetime(data)),
+        "is_finished": Get("MatchIsFinished"),
+        "group": Get("Group") | GetOrCreate(Group),
         "host": Get("Team1") | GetOrCreate(Team),
         "guest": Get("Team2") | GetOrCreate(Team),
         "half_time_result": Get("MatchResults") | Filter(lambda item: item["ResultOrderID"] == 1) | Get(0) | Create(Result),
@@ -76,7 +82,7 @@ def download_matches(session: Session, years: List[int], league: Optional[str] =
 
         for match in pipeline.create_multiple(Match, data, session):  # type: ignore
             match = cast(Match, match)  # this cast is required for "proper typing2...i.e. typevars are annoying
-            match.season = season
+            match.group.season = season
 
             if season not in match.host.seasons:
                 match.host.seasons.append(season)

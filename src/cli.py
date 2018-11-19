@@ -1,6 +1,8 @@
 import click
 
-from .db import DB
+from sqlalchemy.orm import Query
+
+from .db import DB, Model
 from .db.models import *  # noqa: F401
 from .acquisition import download_matches, clean_download_list
 
@@ -40,3 +42,4 @@ def download(years, drop):
         ) as result:
             session.add_all(list(result))
     print("done")
+ 
