@@ -78,7 +78,7 @@ def GetOrCreate(pipeline: Pipeline, data: Any, session: Session, model: Type[M])
 
     """
     kwargs = pipeline.generate_kwargs(model, data, session)
-    instance = session.query(model).filter_by(id=kwargs["id"]).first()
+    instance = session.query(model).filter_by(**kwargs).first()
     if not instance:
         instance = model(**kwargs)  # type: ignore
         session.add(instance)

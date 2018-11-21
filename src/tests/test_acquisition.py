@@ -27,6 +27,9 @@ class TestAcquisition(unittest.TestCase):
             assert all(year not in existing_years for year in years_to_download)
             years_to_download = [year for year in years_to_download if not isinstance(year, _DummyYear)]
 
+            if len(years_to_download) == 0:
+                return
+
             tally = 0
             for match in download_matches(session, years_to_download):
                 if tally % 306 == 0:

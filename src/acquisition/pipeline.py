@@ -6,9 +6,9 @@ import requests
 from sqlalchemy.orm import Session
 
 from ..db import Model
-from ..db.models import Match, Team, Result, Season, Group
+from ..db.models import Match, Team, Season, Group
 from .core import Pipeline
-from .transformations import Get, Custom, Filter, GetOrCreate, Create
+from .transformations import Get, Custom, Filter, GetOrCreate
 
 
 __all__ = (
@@ -77,7 +77,7 @@ def _download_matches(years: List[int], league: Optional[str] = None) -> Generat
         downloads = [executor.submit(download_job, year) for year in years]
         for future in as_completed(downloads):
             year, response = future.result()
-            response.raise_for_status
+            response.raise_for_status()
             yield year, response.json()
 
 
