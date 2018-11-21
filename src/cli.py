@@ -1,8 +1,6 @@
 import click
 
-from sqlalchemy.orm import Query
-
-from .db import DB, Model
+from .db import DB
 from .db.models import *  # noqa: F401
 from .acquisition import download_matches, clean_download_list
 
@@ -31,8 +29,9 @@ def download(years, drop):
 
         if len(years_to_download) == 0:
             print("All seasons already present, none will be downloaded.")
+            return
         elif len(skipped_years) > 0:
-            print("Skipping ", ", ".join(map(str, skipped_years)), "as they are already present.")
+            print("Skipping ", ", ".join(map(str, skipped_years)), f"as {'they are' if len(skipped_years) > 1 else 'it is'} already present.")
 
         with click.progressbar(
             download_matches(session, years_to_download),
@@ -42,4 +41,20 @@ def download(years, drop):
         ) as result:
             session.add_all(list(result))
     print("done")
- 
+
+
+@db.group()
+def query():
+    ...
+
+
+@query.command()
+def matches():
+    with DB.get_session() as session:
+        print(*session.query(Match).all(), sep="\n")
+
+
+@query.command()
+def teams():
+    with DB.get_session() as session:
+        print(*session.query(Team).all(), sep="\n")

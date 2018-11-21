@@ -47,8 +47,8 @@ class TestAcquisition(unittest.TestCase):
         self._test_group(match.group, year)
         self._test_team(match.host, year)
         self._test_team(match.guest, year)
-        assert isinstance(match.half_time_result, Result)
-        assert isinstance(match.end_result, Result)
+        assert isinstance(match.host_points, int)
+        assert isinstance(match.guest_points, int)
 
     def _test_group(self, group, year=None):
         """Check a given group for validity
