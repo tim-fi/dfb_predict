@@ -1,7 +1,11 @@
 import click
 
+from sqlalchemy import or_
+
 from .db import DB
 from .db.models import *  # noqa: F401
+from .db.selectors import RangePoint, RangeSelector
+from .prediction import PREDICTOR_CLASS_REGISTRY
 from .acquisition import download_matches, clean_download_list
 
 
@@ -43,6 +47,20 @@ def download(years, drop):
     print("done")
 
 
+@cli.command()
+@click.argument("host", type=str, nargs=1)
+@click.argument("guest", type=str, nargs=1)
+@click.option("-p", "--predictor", type=click.Choice(PREDICTOR_CLASS_REGISTRY.keys()), default=list(PREDICTOR_CLASS_REGISTRY.keys())[0], help="The predictor to use.")
+def predict(host, guest, predictor):
+    """Make prediction for two given teams."""
+    predictor = PREDICTOR_CLASS_REGISTRY[predictor]()
+    with DB.get_session() as session:
+        predictor.calculate_model(RangeSelector(), session)
+        host_id = session.query(Team.id).filter(or_(Team.name.contains(host), Team.name.ilike(host))).first()
+        guest_id = session.query(Team.id).filter(or_(Team.name.contains(guest), Team.name.ilike(guest))).first()
+        print(predictor.make_prediction(host_id, guest_id))
+
+
 @db.group()
 def query():
     ...
@@ -50,8 +68,12 @@ def query():
 
 @query.command()
 def matches():
+    selector = RangeSelector(
+        start=RangePoint(),
+        end=RangePoint()
+    )
     with DB.get_session() as session:
-        print(*session.query(Match).all(), sep="\n")
+        print(*selector.build_query().with_session(session), sep="\n")
 
 
 @query.command()

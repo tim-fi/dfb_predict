@@ -1,50 +1,61 @@
-from sqlalchemy import and_, or_
+from dataclasses import dataclass
+from typing import List, Optional
 
-from .models import *
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Query, Session
+
+from .models import Group, Season, Match
 
 
 __all__ = (
-    "matches_in_range",
+    "RangeSelector",
+    "RangePoint"
 )
 
 
-def matches_in_year(session, year):
-    return session.query(Match).filter(Season.year == year)
+base_query = Query(Match).join(Match.group, Group.season)
 
 
-def matches_in_group(session, group):
-    return session.query(Match).filter(Group.order_id == group)
+@dataclass
+class RangePoint:
+    year: Optional[int] = None
+    group: Optional[int] = None
+
+    def is_null(self):
+        return self.year is None and self.group is None
+
+    def is_partial(self):
+        return (self.year is None) ^ (self.group is None)
 
 
-def matches_in_years(session, lower_year, upper_year):
-    return session.query(Match).filter(and_(Season.year >= lower_year, Season.year <= upper_year))
+class RangeSelector:
+    def __init__(self, start: RangePoint = None, end: RangePoint = None) -> None:
+        self._start = start or RangePoint()
+        self._end = end or RangePoint()
 
-
-def matches_in_groups(session, lower_group, upper_group):
-    return session.query(Match).filter(and_(Group.order_id >= lower_group, Group.order_id <= upper_group))
-
-
-def matches_in_range(session, *, years=None, groups=None):
-    if years is None and groups is None:
-        return session.query(Match).all()
-    elif years is None and groups is not None or years == (None, None):
-        return matches_in_groups(session, *groups)
-    elif years is not None and groups is None or groups == (None, None):
-        return matches_in_years(session, *years)
-    else:
-        lower_year, upper_year = years
-        lower_group, upper_group = groups
-        return session.query(Match).filter(or_(
-            and_(
-                Group.season.year == lower_year,
-                Group.order_id >= lower_group
-            ),
-            and_(
-                Group.season.year > lower_year,
-                Group.season.year < upper_year
-            ),
-            and_(
-                Group.season.year == upper_year,
-                Group.order_id <= upper_group
+    def build_query(self) -> Query:
+        filters = [
+            Match.is_finished,
+        ]
+        if not self._end.is_null() and not self._end.is_partial():
+            filters.append(
+                or_(
+                    Season.year < self._end.year,
+                    and_(
+                        Season.year == self._end.year,
+                        Group.order_id <= self._end.group
+                    )
+                ),
             )
-        ))
+        if not self._start.is_null() and not self._start.is_partial():
+            filters.append(
+                or_(
+                    Season.year > self._start.year,
+                    and_(
+                        Season.year == self._start.year,
+                        Group.order_id >= self._start.group
+                    )
+                )
+            )
+
+        return base_query.filter(and_(*filters))
