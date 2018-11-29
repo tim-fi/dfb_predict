@@ -21,8 +21,8 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
     def calculate_model(self, selector: RangeSelector, session: Session) -> None:
         dfs = [
             {
-                "host": match.host_id,
-                "guest": match.guest_id,
+                "host": match.host.name,
+                "guest": match.guest.name,
                 "host_goals": match.host_points,
                 "guest_goals": match.guest_points,
             }
@@ -65,10 +65,21 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
             family=sm.families.Poisson()
         ).fit()
 
-    def make_prediction(self, host_id, guest_id, max_goals=10):
-        host, guest = self.make_match(host_id, guest_id)
-        host_goals_avg = self._model.predict(host).values[0]
-        guest_goals_avg = self._model.predict(guest).values[0]
+    def make_prediction(self, host_name, guest_name, max_goals=10):
+        host_goals_avg = self._model.predict(
+            pd.DataFrame(data={
+                "team": host_name,
+                "opponent": guest_name,
+                "home": 1
+            }, index=[1])
+        ).values[0]
+        guest_goals_avg = self._model.predict(
+            pd.DataFrame(data={
+                "team": guest_name,
+                "opponent": host_name,
+                "home": 0
+            }, index=[1])
+        ).values[0]
 
         prediction = [
             [
@@ -88,18 +99,3 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
             "draw": np.sum(np.diag(results)),
             "guest": np.sum(np.triu(results, 1))
         }
-
-    @staticmethod
-    def make_match(host_id, guest_id):
-        return (
-            pd.DataFrame(data={
-                "team": host_id,
-                "opponent": guest_id,
-                "home": 1
-            }, index=[1]),
-            pd.DataFrame(data={
-                "team": guest_id,
-                "opponent": host_id,
-                "home": 0
-            }, index=[1])
-        )

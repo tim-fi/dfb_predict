@@ -56,9 +56,28 @@ def predict(host, guest, predictor):
     predictor = PREDICTOR_CLASS_REGISTRY[predictor]()
     with DB.get_session() as session:
         predictor.calculate_model(RangeSelector(), session)
-        host_id = session.query(Team.id).filter(or_(Team.name.contains(host), Team.name.ilike(host))).first()
-        guest_id = session.query(Team.id).filter(or_(Team.name.contains(guest), Team.name.ilike(guest))).first()
-        print(predictor.make_prediction(host_id, guest_id))
+        host_candidates = session.query(Team).filter(or_(Team.name.contains(host), Team.name.ilike(host)))
+        guest_candidates = session.query(Team).filter(or_(Team.name.contains(guest), Team.name.ilike(guest)))
+
+        errors = []
+        if host_candidates.count() > 1:
+            errors.append(f"Multiple options for {repr(host)}: {', '.join(str(team) for team in host_candidates)}")
+        if guest_candidates.count() > 1:
+            errors.append(f"Multiple options for {repr(guest)}: {', '.join(str(team) for team in guest_candidates)}")          
+        if host_candidates.count() == 0:
+            errors.append(f"Couldn't find team for {repr(host)}.")
+        if guest_candidates.count() == 0:
+            errors.append(f"Couldn't find team for {repr(guest)}.")
+        if len(errors) > 0:
+            for error in errors:
+                print("ERR:", error)
+            print("\nOptions for teams:")
+            print(*["> " + str(team) for team in session.query(Team).all()], sep="\n")
+        else:
+            host_name = host_candidates.first().name
+            guest_name = guest_candidates.first().name
+            print(host_name, "vs", guest_name)
+            print(predictor.make_prediction(host_name, guest_name))
 
 
 @db.group()
