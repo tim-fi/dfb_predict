@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import Query, Session
+from sqlalchemy.orm import Query
 
 from .models import Group, Season, Match
 

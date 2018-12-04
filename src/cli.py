@@ -63,7 +63,7 @@ def predict(host, guest, predictor):
         if host_candidates.count() > 1:
             errors.append(f"Multiple options for {repr(host)}: {', '.join(str(team) for team in host_candidates)}")
         if guest_candidates.count() > 1:
-            errors.append(f"Multiple options for {repr(guest)}: {', '.join(str(team) for team in guest_candidates)}")          
+            errors.append(f"Multiple options for {repr(guest)}: {', '.join(str(team) for team in guest_candidates)}")
         if host_candidates.count() == 0:
             errors.append(f"Couldn't find team for {repr(host)}.")
         if guest_candidates.count() == 0:
