@@ -12,6 +12,7 @@ class _DummyYear(int):
 class TestAcquisition(unittest.TestCase):
     def setUp(self):
         self.DB = _DB("sqlite:///:memory:")
+        self.DB.drop_tables()
         self.DB.create_tables()
 
     def download(self, years):
@@ -33,7 +34,7 @@ class TestAcquisition(unittest.TestCase):
             tally = 0
             for match in download_matches(session, years_to_download):
                 if tally % 306 == 0:
-                    target_year = years_to_download[tally // 306]
+                    target_year = match.group.season.year
                 self._test_match(match, target_year)
                 tally += 1
                 session.add(match)
@@ -81,13 +82,13 @@ class TestAcquisition(unittest.TestCase):
             assert any(season.year == year for season in team.seasons)
 
     def test_aqcuisition(self):
-        """Test the acquisition of a single year."""
+        """>>> Test the acquisition of a single year."""
         self.download([2016])
 
     def test_aqcuisition_multiple(self):
-        """Test the acquisition of multiple years."""
+        """>>> Test the acquisition of multiple years."""
         self.download([2015, 2017])
 
     def test_aqcuisition_with_collision(self):
-        """Test the acquisition for collisions."""
+        """>>> Test the acquisition for collisions."""
         self.download([2015, 2016, 2017])
