@@ -23,6 +23,7 @@ mypy = "*"
 tests = "python -m unittest discover -v"
 db = "python -m src db"
 download = "python -m src db download"
+predict = "python -m src predict"
 
 [requires]
 python_version = "3.7"

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 from contextlib import contextmanager
-from typing import Generator, Type, ClassVar, Dict
+from typing import Generator, Type, ClassVar, Dict, List
 
 from sqlalchemy import create_engine, Column, Integer
-from sqlalchemy.orm import sessionmaker, scoped_session, Session
+from sqlalchemy.orm import sessionmaker, scoped_session, Session, Query
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.declarative import as_declarative
 

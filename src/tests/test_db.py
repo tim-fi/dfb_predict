@@ -12,5 +12,6 @@ class TestDB(unittest.TestCase):
         self.DB.create_tables()
 
     def test_get_session(self):
+        """>>> Test the session functionality of our DB-wrapper-class."""
         with self.DB.get_session() as session:
             assert isinstance(session, Session)
