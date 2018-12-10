@@ -24,6 +24,7 @@ tests = "python -m unittest discover -v"
 db = "python -m src db"
 download = "python -m src db download"
 predict = "python -m src predict"
+ui = "python -m src ui"
 
 [requires]
 python_version = "3.7"

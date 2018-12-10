@@ -7,11 +7,17 @@ from .db.models import *  # noqa: F401
 from .db.selectors import RangePoint, RangeSelector
 from .prediction import PREDICTOR_CLASS_REGISTRY
 from .acquisition import download_matches, clean_download_list
+from .ui import App
 
 
 @click.group()
 def cli():
     ...
+
+
+@cli.command()
+def ui():
+    App.run_app()
 
 
 @cli.group()
