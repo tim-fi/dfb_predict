@@ -6,7 +6,7 @@ import statsmodels.formula.api as smf
 from sqlalchemy.orm import Session
 
 from ..db import RangeSelector
-from .base import BasePredictor
+from .base import Predictor
 
 
 __all__ = (
@@ -14,7 +14,7 @@ __all__ = (
 )
 
 
-class PoissonPredictor(BasePredictor, verbose_name="poisson"):
+class PoissonPredictor(Predictor, verbose_name="poisson"):
     def __init__(self) -> None:
         self._model = None
 
@@ -26,7 +26,7 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
                 "host_goals": match.host_points,
                 "guest_goals": match.guest_points,
             }
-            for match in selector.build_query().with_session(session)
+            for match in selector.build_match_query().with_session(session)
         ]
         if len(dfs) == 0:
             raise RuntimeError("Couldn't rebuild model, no matches for given selector...")

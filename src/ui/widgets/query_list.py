@@ -1,0 +1,35 @@
+import tkinter as tk
+from collections import OrderedDict
+
+from .scrollable_list import ScrollableList
+from ...db import DB
+
+
+__all__ = (
+    "QueryList",
+)
+
+
+class QueryList(ScrollableList):
+    def __init__(self, parent, query, selectmode=None):
+        super().__init__(parent, selectmode=selectmode)
+        self._query = query
+        self._data = {}
+        self.fill()
+
+    def fill(self):
+        self.delete(0, tk.END)
+        with DB.get_session() as session:
+            self._data = OrderedDict([
+                (str(instance), instance.id)
+                for instance in (self._query() if callable(self._query) else self._query).with_session(session)
+            ])
+            for item in self._data:
+                self.insert(tk.END, item)
+
+    def get_cur(self):
+        selection = super().get_cur()
+        if selection is None:
+            return None
+        else:
+            return [self._data[s] for s in selection]

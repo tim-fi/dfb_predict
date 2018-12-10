@@ -2,17 +2,15 @@ from abc import ABCMeta, abstractmethod
 
 
 __all__ = (
-    "PREDICTOR_CLASS_REGISTRY",
-    "BasePredictor"
+    "Predictor",
 )
 
 
-PREDICTOR_CLASS_REGISTRY = dict()
+class Predictor(metaclass=ABCMeta):
+    registry = dict()
 
-
-class BasePredictor(metaclass=ABCMeta):
     def __init_subclass__(cls, verbose_name=None):
-        PREDICTOR_CLASS_REGISTRY[verbose_name or cls.__name__] = cls
+        Predictor.registry[verbose_name or cls.__name__] = cls
 
     @abstractmethod
     def calculate_model(self, selector, session):

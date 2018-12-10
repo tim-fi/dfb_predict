@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 
-from .models import Group, Season, Match
+from .models import Group, Season, Match, Team
 
 
 __all__ = (
@@ -33,7 +33,10 @@ class RangeSelector:
         self._start = start or RangePoint()
         self._end = end or RangePoint()
 
-    def build_query(self) -> Query:
+    def build_team_query(self) -> Query:
+        return Query(Team)
+
+    def build_match_query(self) -> Query:
         filters = [
             Match.is_finished,
         ]
