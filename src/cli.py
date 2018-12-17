@@ -6,7 +6,7 @@ from .db import DB
 from .db.models import *  # noqa: F401
 from .db.selectors import RangePoint, RangeSelector
 from .prediction import Predictor
-from .acquisition import download_matches, clean_download_list
+from .acquisition import download_matches, clean_download_list, get_current_groups_matches
 from .ui import App
 
 
@@ -18,6 +18,19 @@ def cli():
 @cli.command()
 def ui():
     App.run_app()
+
+
+@cli.command()
+def currentmatches():
+    season_name, group_id, matches = get_current_groups_matches()
+    print(
+        f"Spiele am {group_id}-ten Spieltag der {season_name}: ",
+        *[
+            f"{i+1}: {host} vs {guest}"
+            for i, (host, guest) in enumerate(matches)
+        ],
+        sep="\n"
+    )
 
 
 @cli.group()

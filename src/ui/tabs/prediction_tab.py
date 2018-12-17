@@ -20,6 +20,15 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self._control_frame = tk.Frame(self)
         self._control_frame.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
 
+        self._team_select_label_frame = tk.Frame(self)
+        self._team_select_label_frame.pack(in_=self._control_frame, fill=tk.BOTH, expand=True)
+
+        self._host_team_label = ttk.Label(self, text="Host:")
+        self._host_team_label.pack(in_=self._team_select_label_frame, fill=tk.X, expand=True, side=tk.LEFT)
+
+        self._guest_team_label = ttk.Label(self, text="Guest:")
+        self._guest_team_label.pack(in_=self._team_select_label_frame, fill=tk.X, expand=True, side=tk.RIGHT)
+
         self._team_select_frame = tk.Frame(self)
         self._team_select_frame.pack(in_=self._control_frame, fill=tk.BOTH, expand=True)
 
@@ -42,7 +51,13 @@ class PredictionTab(Tab, verbose_name="prediction"):
 
         self._work_lock = RLock()
 
-    
+        self._result_frame = tk.Frame(self)
+        self._result_frame.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT)
+
+        self._result_text = tk.Text(self, height=10, width=50)
+        self._result_text.pack(in_=self._result_frame, fill=tk.BOTH, expand=True)
+        self._result_text.config(state=tk.DISABLED)
+
     def fill_team_lists(self):
         self._host_team_list.fill()
         self._guest_team_list.fill()
@@ -68,4 +83,17 @@ class PredictionTab(Tab, verbose_name="prediction"):
             host_name = session.query(Team).filter_by(id=host_id).first().name
             guest_name = session.query(Team).filter_by(id=guest_id).first().name
             result = predictor.make_prediction(host_name, guest_name)
-            print(result)
+            self._result_text.config(state=tk.NORMAL)
+            self._result_text.delete('1.0', tk.END)
+            self._result_text.insert(tk.END, str(result))
+            self._result_text.config(state=tk.DISABLED)
+
+
+"""
+Iterate through all matches (with rematches...):
+
+for i, host in enumerate(teams):
+    for guest in teams[i+1:]:
+        print(f"Game [>] - {host} vs {guest}")
+        print(f"Game [<] - {guest} vs {host}")
+"""
