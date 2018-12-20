@@ -9,6 +9,12 @@ __all__ = (
 
 
 class Tab(tk.Frame):
+    """Base tab class
+    
+    This class is "used" to "collect" all tabs, i.e.
+    tabclasses, in a registry, thus making it easier
+    to iterate over them programatically.
+    """
     registry = dict()
 
     def __init_subclass__(cls, verbose_name=None):
@@ -28,6 +34,11 @@ class Tab(tk.Frame):
 
 
 class Tabs(ttk.Notebook):
+    """Tab container
+    
+    This class is the widget which contains all the
+    tabs from the tabclass registry.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for label, tab_class in Tab.registry.items():

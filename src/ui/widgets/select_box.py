@@ -7,6 +7,7 @@ __all__ = (
 
 
 class SelectBox(tk.Frame):
+    """Custom widget: dropdown selectbox"""
     def __init__(self, parent, choices, label=None, set_default=False):
         super().__init__(parent)
         self._selected_value = tk.StringVar(parent)

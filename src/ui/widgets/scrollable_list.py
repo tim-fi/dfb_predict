@@ -7,6 +7,7 @@ __all__ = (
 
 
 class ScrollableList(tk.Frame):
+    """Custom widget: listbox with scrollbar"""
     def __init__(self, parent, selectmode=None):
         super().__init__(parent)
         self._scrollbar = tk.Scrollbar(parent, orient=tk.VERTICAL)

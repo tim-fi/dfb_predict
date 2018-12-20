@@ -4,6 +4,7 @@ from .tabs import Tabs
 
 
 class App(tk.Frame):
+    """Main body of the UI application"""
     def __init__(self, parent):
         super().__init__(parent)
         parent.resizable(0, 0)

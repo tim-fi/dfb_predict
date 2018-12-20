@@ -14,6 +14,7 @@ __all__ = (
 
 
 class PredictionTab(Tab, verbose_name="prediction"):
+    """This tab contains all things related to making predictions."""
     def create_widgets(self):
         self._selector = RangeSelector()
 
@@ -63,6 +64,7 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self._guest_team_list.fill()
 
     def _make_prediction(self):
+        """Config collection for and starting of prediction job."""
         if self._work_lock.acquire(blocking=False):
             host_id = self._host_team_list.get_cur()[0]
             guest_id = self._guest_team_list.get_cur()[0]
