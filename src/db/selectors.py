@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 
-from .models import Group, Season, Match
+from .models import Group, Season, Match, Team
 
 
 __all__ = (
@@ -18,6 +18,7 @@ base_query = Query(Match).join(Match.group, Group.season)
 
 @dataclass
 class RangePoint:
+    """Edge of a selection"""
     year: Optional[int] = None
     group: Optional[int] = None
 
@@ -29,11 +30,17 @@ class RangePoint:
 
 
 class RangeSelector:
+    """Complete selection"""
     def __init__(self, start: RangePoint = None, end: RangePoint = None) -> None:
         self._start = start or RangePoint()
         self._end = end or RangePoint()
 
-    def build_query(self) -> Query:
+    def build_team_query(self) -> Query:
+        """Build a query for Teams in selected timespace."""
+        return Query(Team)
+
+    def build_match_query(self) -> Query:
+        """Build a query for Matches in selected timespace."""
         filters = [
             Match.is_finished,
         ]

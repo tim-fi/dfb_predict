@@ -5,13 +5,32 @@ from sqlalchemy import or_
 from .db import DB
 from .db.models import *  # noqa: F401
 from .db.selectors import RangePoint, RangeSelector
-from .prediction import PREDICTOR_CLASS_REGISTRY
-from .acquisition import download_matches, clean_download_list
+from .prediction import Predictor
+from .acquisition import download_matches, clean_download_list, get_current_groups_matches
+from .ui import App
 
 
 @click.group()
 def cli():
     ...
+
+
+@cli.command()
+def ui():
+    App.run_app()
+
+
+@cli.command()
+def currentmatches():
+    season_name, group_id, matches = get_current_groups_matches()
+    print(
+        f"Spiele am {group_id}-ten Spieltag der {season_name}: ",
+        *[
+            f"{i+1}: {host} vs {guest}"
+            for i, (host, guest) in enumerate(matches)
+        ],
+        sep="\n"
+    )
 
 
 @cli.group()
@@ -50,10 +69,10 @@ def download(years, drop):
 @cli.command()
 @click.argument("host", type=str, nargs=1)
 @click.argument("guest", type=str, nargs=1)
-@click.option("-p", "--predictor", type=click.Choice(PREDICTOR_CLASS_REGISTRY.keys()), default=list(PREDICTOR_CLASS_REGISTRY.keys())[0], help="The predictor to use.")
+@click.option("-p", "--predictor", type=click.Choice(Predictor.registry.keys()), default=list(Predictor.registry.keys())[0], help="The predictor to use.")
 def predict(host, guest, predictor):
     """Make prediction for two given teams."""
-    predictor = PREDICTOR_CLASS_REGISTRY[predictor]()
+    predictor = Predictor.registry[predictor]()
     with DB.get_session() as session:
         predictor.calculate_model(RangeSelector(), session)
         host_candidates = session.query(Team).filter(or_(Team.name.contains(host), Team.name.ilike(host)))
@@ -92,7 +111,7 @@ def matches():
         end=RangePoint()
     )
     with DB.get_session() as session:
-        print(*selector.build_query().with_session(session), sep="\n")
+        print(*selector.build_match_query().with_session(session), sep="\n")
 
 
 @query.command()

@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import pandas as pd
 import numpy as np
 from scipy.stats import poisson
@@ -6,15 +8,51 @@ import statsmodels.formula.api as smf
 from sqlalchemy.orm import Session
 
 from ..db import RangeSelector
-from .base import BasePredictor
+from .base import Predictor, PredictionResult
 
 
 __all__ = (
     "PoissonPredictor",
+    "PoissonResult"
 )
 
 
-class PoissonPredictor(BasePredictor, verbose_name="poisson"):
+@dataclass(frozen=True)
+class PoissonResult(PredictionResult):
+    goal_distribution: np.ndarray
+
+    def __str__(self):
+        if self.host_win:
+            _goal_distribution = np.tril(self.goal_distribution, -1)
+        elif self.guest_win:
+            _goal_distribution = np.triu(self.goal_distribution, 1)
+        elif self.draw:
+            _goal_distribution = np.diag(self.goal_distribution)
+        else:
+            raise RuntimeError(f"Something magically stupid happen...")
+
+        max_propbaility = _goal_distribution.argmax()
+        host_goals, guest_goals = np.unravel_index(
+            max_propbaility,
+            _goal_distribution.shape
+        )
+
+        return super().__str__() + "\n".join([
+            "",
+            f" -> Most propable result: {host_goals}:{guest_goals} [{self.goal_distribution[host_goals,guest_goals]:.2%}]",
+            *([
+                " <!> A different result has a higher",
+                "     propabilty but it lies outside",
+                "     of the resultspace definied by",
+                "     the most propable outcome.",
+                "----------------------------------------",
+            ] if max_propbaility != self.goal_distribution.argmax() else [
+                "----------------------------------------"
+            ])
+        ])
+
+
+class PoissonPredictor(Predictor, verbose_name="poisson"):
     def __init__(self) -> None:
         self._model = None
 
@@ -26,7 +64,7 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
                 "host_goals": match.host_points,
                 "guest_goals": match.guest_points,
             }
-            for match in selector.build_query().with_session(session)
+            for match in selector.build_match_query().with_session(session)
         ]
         if len(dfs) == 0:
             raise RuntimeError("Couldn't rebuild model, no matches for given selector...")
@@ -65,7 +103,7 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
             family=sm.families.Poisson()
         ).fit()
 
-    def make_prediction(self, host_name, guest_name, max_goals=10):
+    def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
         host_goals_avg = self._model.predict(
             pd.DataFrame(data={
                 "team": host_name,
@@ -94,8 +132,11 @@ class PoissonPredictor(BasePredictor, verbose_name="poisson"):
             np.array(prediction[1])
         )
 
-        return {
-            "host": np.sum(np.tril(results, -1)),
-            "draw": np.sum(np.diag(results)),
-            "guest": np.sum(np.triu(results, 1))
-        }
+        return PoissonResult(
+            host_name=host_name,
+            guest_name=guest_name,
+            host_win_propability=np.sum(np.tril(results, -1)),
+            draw_propability=np.sum(np.diag(results)),
+            guest_win_propability=np.sum(np.triu(results, 1)),
+            goal_distribution=results
+        )

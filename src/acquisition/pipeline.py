@@ -14,7 +14,8 @@ from .transformations import Get, Custom, Filter, GetOrCreate
 __all__ = (
     "pipeline",
     "download_matches",
-    "clean_download_list"
+    "clean_download_list",
+    "get_current_groups_matches"
 )
 
 
@@ -103,3 +104,18 @@ def download_matches(session: Session, years: List[int], league: Optional[str] =
                 match.guest.seasons.append(season)
 
             yield match
+
+
+def get_current_groups_matches() -> List[Tuple[str, str]]:
+    """Get the matches of the current group"""
+    response = requests.get("https://www.openligadb.de/api/getmatchdata/bl1")
+    response.raise_for_status()
+    data = response.json()
+    return (
+        data[0]["LeagueName"],
+        data[0]["Group"]["GroupOrderID"],
+        [
+            (match["Team1"]["TeamName"], match["Team2"]["TeamName"])
+            for match in data
+        ]
+    )
