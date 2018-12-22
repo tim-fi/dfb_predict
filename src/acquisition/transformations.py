@@ -10,8 +10,10 @@ __all__ = (
     "Custom",
     "Attr",
     "Filter",
+    "Gather",
     "GetOrCreate",
-    "Create"
+    "Create",
+    "CreateMultiple"
 )
 
 
@@ -71,6 +73,16 @@ def Filter(pipeline: Pipeline, data: List[T], session: Session, pred: Callable[[
 
 
 @Transformation.from_func
+def Gather(pipeline: Pipeline, data: Any, session: Session, *names: List[str]) -> Dict:
+    """Gather multiple different values into a list
+
+    :param names: keywords to reference
+
+    """
+    return {name: data[name] for name in names}
+
+
+@Transformation.from_func
 def GetOrCreate(pipeline: Pipeline, data: Any, session: Session, model: Type[M]) -> M:
     """Get or create an instant model from data
 
@@ -97,3 +109,18 @@ def Create(pipeline: Pipeline, data: Any, session: Session, model: Type[M]) -> M
     session.add(instance)
     session.commit()
     return instance
+
+
+@Transformation.from_func
+def CreateMultiple(pipeline: Pipeline, data: Any, session: Session, model: Type[M]) -> List[M]:
+    """Create multiple instances of a  model from data
+
+    :param model: model to create an instances for
+
+    """
+    instances = []
+    for instance_data in data:
+        instances.append(pipeline.create(model, instance_data, session))
+    session.add_all(instances)
+    session.commit()
+    return instances

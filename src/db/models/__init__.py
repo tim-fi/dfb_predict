@@ -1,6 +1,6 @@
 from .season import *
-from .team import *
 from .association_tables import *
+from .team import *
 from .match import *
 from .group import *
 

@@ -4,16 +4,13 @@ from typing import Optional
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 
-from .models import Group, Season, Match, Team
+from .models import Group, Season, Match, Team, MatchParticipation
 
 
 __all__ = (
     "RangeSelector",
     "RangePoint"
 )
-
-
-base_query = Query(Match).join(Match.group, Group.season)
 
 
 @dataclass
@@ -36,8 +33,29 @@ class RangeSelector:
         self._end = end or RangePoint()
 
     def build_team_query(self) -> Query:
-        """Build a query for Teams in selected timespace."""
-        return Query(Team)
+        """Build a query for Teams with matches in selected timespace."""
+        filters = []
+        if not self._end.is_null() and not self._end.is_partial():
+            filters.append(
+                or_(
+                    Team.seasons.has(Season.year < self._end.year),
+                    and_(
+                        Team.seasons.has(Season.year == self._end.year),
+                        Team.match_participations.has(MatchParticipation.match.group.order_id <= self._end.group)
+                    )
+                ),
+            )
+        if not self._start.is_null() and not self._start.is_partial():
+            filters.append(
+                or_(
+                    Team.seasons.has(Season.year > self._start.year),
+                    and_(
+                        Team.seasons.has(Season.year == self._start.year),
+                        Team.match_participations.has(MatchParticipation.match.group.order_id >= self._start.group)
+                    )
+                )
+            )
+        return Query(Team).join(MatchParticipation).filter(and_(*filters))
 
     def build_match_query(self) -> Query:
         """Build a query for Matches in selected timespace."""
@@ -64,5 +82,4 @@ class RangeSelector:
                     )
                 )
             )
-
-        return base_query.filter(and_(*filters))
+        return Query(Match).join(Match.group, Group.season).filter(and_(*filters))

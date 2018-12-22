@@ -6,9 +6,9 @@ import requests
 from sqlalchemy.orm import Session
 
 from ..db import Model
-from ..db.models import Match, Team, Season, Group
+from ..db.models import Match, Team, Season, Group, MatchParticipation
 from .core import Pipeline
-from .transformations import Get, Custom, Filter, GetOrCreate
+from .transformations import Get, Custom, Filter, GetOrCreate, CreateMultiple
 
 
 __all__ = (
@@ -20,6 +20,11 @@ __all__ = (
 
 
 pipeline: Pipeline[Model] = Pipeline({
+    MatchParticipation: {
+        "team": Get("Team") | GetOrCreate(Team),
+        "match_id": Get("MatchID"),
+        "hosted": Get("hosted")
+    },
     Team: {
         "id": Get("TeamId"),
         "name": Get("TeamName")
@@ -33,8 +38,10 @@ pipeline: Pipeline[Model] = Pipeline({
         "date": Get("MatchDateTime") | Custom(lambda data: parse_datetime(data)),
         "is_finished": Get("MatchIsFinished"),
         "group": Get("Group") | GetOrCreate(Group),
-        "host": Get("Team1") | GetOrCreate(Team),
-        "guest": Get("Team2") | GetOrCreate(Team),
+        "match_participations": Custom(lambda data: [
+            {"MatchID": data["MatchID"], "Team": data["Team1"], "hosted": True},
+            {"MatchID": data["MatchID"], "Team": data["Team2"], "hosted": False},
+        ]) | CreateMultiple(MatchParticipation),
         "host_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | Get(0) | Get("PointsTeam1"),
         "guest_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | Get(0) | Get("PointsTeam2"),
     }
