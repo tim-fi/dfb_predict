@@ -26,11 +26,11 @@ class SelectBox(tk.Frame):
     def add_option(self, option):
         self._popup_menu['menu'].add_command(label=option, command=tk._setit(self._selected_value, option))
 
-    def set_options(self, options):
-        self._selected_value.set('')
+    def set_options(self, options, set_val=None):
         self._popup_menu['menu'].delete(0, 'end')
         for option in options:
             self.add_option(option)
+        self._selected_value.set('' if set_val is None else set_val)
 
     def _trace_value(self, *args):
         self._selection = self._selected_value.get()

@@ -39,11 +39,11 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self._guest_team_list = QueryList(self, self._selector.build_team_query, selectmode=tk.SINGLE)
         self._guest_team_list.pack(in_=self._team_select_frame, fill=tk.BOTH, expand=True, side=tk.RIGHT)
 
-        self._range_selector_widget = RangeSelectorWidget(self, text="Zeitraum")
+        self._range_selector_widget = RangeSelectorWidget(self, text="Daterange")
         self._range_selector_widget.pack(in_=self._control_frame, fill=tk.X, expand=True)
         self._range_selector_widget.add_tracer(self._range_tracer)
 
-        self._predictor_selectbox = SelectBox(self, choices=list(Predictor.registry.keys()), label="Choose prediction method:")
+        self._predictor_selectbox = SelectBox(self, choices=list(Predictor.registry.keys()), label="Choose prediction method")
         self._predictor_selectbox.pack(in_=self._control_frame, fill=tk.X, expand=True)
 
         self._prediction_trigger = ttk.Button(self, text="predict", command=self._make_prediction)

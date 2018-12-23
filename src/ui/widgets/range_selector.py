@@ -3,6 +3,8 @@ import tkinter.ttk as ttk
 
 from .select_box import SelectBox
 from ...db.selectors import RangeSelector, RangePoint
+from ...db import DB
+from ...db.models import Season
 
 
 __all__ = (
@@ -22,25 +24,26 @@ class RangeSelectorWidget(tk.Frame):
         self._inner_frame = tk.Frame(self)
         self._inner_frame.pack(in_=self._outer_frame, side=tk.RIGHT, fill=tk.X, expand=True)
 
-        self._start_frame = ttk.LabelFrame(self, text="von")
+        self._start_frame = ttk.LabelFrame(self, text="from")
         self._start_frame.pack(in_=self._inner_frame, side=tk.LEFT, fill=tk.X, expand=True)
 
-        self._start_year = SelectBox(self, ["----", *map(str, range(2002, 2018))], set_default=True)
+        self._start_year = SelectBox(self, ["----"], set_default=True)
         self._start_year.pack(in_=self._start_frame, side=tk.LEFT, fill=tk.X, expand=True)
 
         self._start_group = SelectBox(self, ["--", *map(str, range(1, 35))], set_default=True)
         self._start_group.pack(in_=self._start_frame, side=tk.RIGHT, fill=tk.X, expand=True)
-    
-        self._end_frame = ttk.LabelFrame(self, text="bis")
+
+        self._end_frame = ttk.LabelFrame(self, text="until")
         self._end_frame.pack(in_=self._inner_frame, side=tk.RIGHT, fill=tk.X, expand=True)
 
-        self._end_year = SelectBox(self, ["----", *map(str, range(2002, 2018))], set_default=True)
+        self._end_year = SelectBox(self, ["----"], set_default=True)
         self._end_year.pack(in_=self._end_frame, side=tk.LEFT, fill=tk.X, expand=True)
 
         self._end_group = SelectBox(self, ["--", *map(str, range(1, 35))], set_default=True)
         self._end_group.pack(in_=self._end_frame, side=tk.RIGHT, fill=tk.X, expand=True)
 
         self.add_tracer(self._tracer)
+        self.populate_years()
 
         self._range_selection = RangeSelector()
 
@@ -96,6 +99,13 @@ class RangeSelectorWidget(tk.Frame):
             )
         except TypeError as e:
             tk.messagebox.showerror("Error", e.args[0])
+
+    def populate_years(self):
+        with DB.get_session() as session:
+            years = [year for (year,) in session.query(Season.year).all()]
+            years.sort()
+            self._start_year.set_options(["----", *years], set_val="----")
+            self._end_year.set_options(["----", *years], set_val="----")
 
     @property
     def selection(self):
