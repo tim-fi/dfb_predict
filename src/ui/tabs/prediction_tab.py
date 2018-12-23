@@ -3,7 +3,7 @@ import tkinter.ttk as ttk
 from threading import Thread, RLock
 
 from .base import Tab
-from ..widgets import QueryList, SelectBox
+from ..widgets import QueryList, SelectBox, RangeSelectorWidget
 from ...prediction import Predictor
 from ...db import DB, Team, RangeSelector
 
@@ -39,6 +39,10 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self._guest_team_list = QueryList(self, self._selector.build_team_query, selectmode=tk.SINGLE)
         self._guest_team_list.pack(in_=self._team_select_frame, fill=tk.BOTH, expand=True, side=tk.RIGHT)
 
+        self._range_selector_widget = RangeSelectorWidget(self, text="Zeitraum")
+        self._range_selector_widget.pack(in_=self._control_frame, fill=tk.X, expand=True)
+        self._range_selector_widget.add_tracer(self._range_tracer)
+
         self._predictor_selectbox = SelectBox(self, choices=list(Predictor.registry.keys()), label="Choose prediction method:")
         self._predictor_selectbox.pack(in_=self._control_frame, fill=tk.X, expand=True)
 
@@ -59,6 +63,10 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self._result_text.pack(in_=self._result_frame, fill=tk.BOTH, expand=True)
         self._result_text.config(state=tk.DISABLED)
 
+    def _range_tracer(self, *args):
+        self._selector.copy(self._range_selector_widget.selection)
+        self.fill_team_lists()
+
     def fill_team_lists(self):
         self._host_team_list.fill()
         self._guest_team_list.fill()
@@ -66,8 +74,8 @@ class PredictionTab(Tab, verbose_name="prediction"):
     def _make_prediction(self):
         """Config collection for and starting of prediction job."""
         if self._work_lock.acquire(blocking=False):
-            host_id = self._host_team_list.get_cur()[0]
-            guest_id = self._guest_team_list.get_cur()[0]
+            host_id = self._host_team_list.get_cur()
+            guest_id = self._guest_team_list.get_cur()
             predictor = self._predictor_selectbox.selection
 
             if host_id is None or guest_id is None:
@@ -75,7 +83,7 @@ class PredictionTab(Tab, verbose_name="prediction"):
             elif predictor is None:
                 tk.messagebox.showerror("Error", "Please select a prediction method.")
             else:
-                Thread(target=self._prediction_job, args=(host_id, guest_id, self._predictors[predictor])).start()
+                Thread(target=self._prediction_job, args=(host_id[0], guest_id[0], self._predictors[predictor])).start()
 
             self._work_lock.release()
 

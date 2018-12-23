@@ -13,11 +13,12 @@ class SelectBox(tk.Frame):
         self._selected_value = tk.StringVar(parent)
         self._choices = choices
         if set_default:
-            self._selected_value.set(self.choices[0])
+            self._selected_value.set(self._choices[0])
         self._popup_menu = tk.OptionMenu(parent, self._selected_value, *self._choices)
         self._popup_menu.pack(in_=self, side=tk.RIGHT, fill=tk.X)
-        self._label = tk.Label(parent, text=label or "Choose")
-        self._label.pack(in_=self, side=tk.LEFT, fill=tk.X)
+        if label is not None:
+            self._label = tk.Label(parent, text=label or "Choose")
+            self._label.pack(in_=self, side=tk.LEFT, fill=tk.X)
         self._selection = None
         self._selected_value.trace("w", self._trace_value)
         self._trace_callbacks = []
