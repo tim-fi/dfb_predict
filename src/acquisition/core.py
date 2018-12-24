@@ -54,6 +54,18 @@ class Pipeline(Generic[M]):
             for key, transformation in self._transformations[model].items()
         }
 
+    def generate_kwarg(self, model: Type[M], key: str, data: Any, session: Session) -> Any:
+        """Generate a single kwarg for model instantiation based on the given data
+        and the predefined transformation map
+
+        :param model: target model
+        :param key: the kwarg to generate
+        :param data: data to use in creation process
+        :param session: DB session to use for queries
+
+        """
+        return self._transformations[model][key](self, data, session)
+
     def create_multiple(self, model: Type[M], data: Any, session: Session) -> Generator[M, None, None]:
         """Create multiple instances of a given model based on the given data
 

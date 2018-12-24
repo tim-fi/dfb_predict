@@ -10,7 +10,7 @@ __all__ = (
 
 class Tab(tk.Frame):
     """Base tab class
-    
+
     This class is "used" to "collect" all tabs, i.e.
     tabclasses, in a registry, thus making it easier
     to iterate over them programatically.
@@ -30,12 +30,12 @@ class Tab(tk.Frame):
         self.create_widgets()
 
     def create_widgets(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class Tabs(ttk.Notebook):
     """Tab container
-    
+
     This class is the widget which contains all the
     tabs from the tabclass registry.
     """

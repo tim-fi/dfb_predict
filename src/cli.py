@@ -39,6 +39,18 @@ def db():
 
 
 @db.command()
+@click.option("-y", "--yes", is_flag=True, help="skip confirmation prompt")
+def drop(yes):
+    if yes or click.confirm("Are you sure you want to drop all tables?", abort=True):
+        if not yes:
+            print("dropping tables...", end="")
+        DB.drop_tables()
+        DB.create_tables()
+        if not yes:
+            print("done")
+
+
+@db.command()
 @click.argument("years", nargs=-1, type=int)
 @click.option("-d", "--drop", is_flag=True, help="drop all tables before downloading matches")
 def download(years, drop):

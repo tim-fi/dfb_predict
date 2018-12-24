@@ -21,7 +21,7 @@ __all__ = (
 
 pipeline: Pipeline[Model] = Pipeline({
     MatchParticipation: {
-        "team": Get("Team") | GetOrCreate(Team),
+        "team": Get("Team") | GetOrCreate(Team, match_targets=["id"]),
         "match_id": Get("MatchID"),
         "hosted": Get("hosted")
     },
@@ -37,7 +37,7 @@ pipeline: Pipeline[Model] = Pipeline({
         "id": Get("MatchID"),
         "date": Get("MatchDateTime") | Custom(lambda data: parse_datetime(data)),
         "is_finished": Get("MatchIsFinished"),
-        "group": Get("Group") | GetOrCreate(Group),
+        "group": Get("Group") | GetOrCreate(Group, match_targets=["id"]),
         "match_participations": Custom(lambda data: [
             {"MatchID": data["MatchID"], "Team": data["Team1"], "hosted": True},
             {"MatchID": data["MatchID"], "Team": data["Team2"], "hosted": False},

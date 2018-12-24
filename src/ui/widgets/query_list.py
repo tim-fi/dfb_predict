@@ -19,14 +19,12 @@ class QueryList(ScrollableList):
         self.fill()
 
     def fill(self):
-        self.delete(0, tk.END)
         with DB.get_session() as session:
             self._data = OrderedDict([
                 (str(instance), instance.id)
                 for instance in (self._query() if callable(self._query) else self._query).with_session(session)
             ])
-            for item in self._data:
-                self.insert(tk.END, item)
+        self.set_values(self._data.keys())
 
     def get_cur(self):
         selection = super().get_cur()

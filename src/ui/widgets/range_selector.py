@@ -13,37 +13,36 @@ __all__ = (
 
 
 class RangeSelectorWidget(tk.Frame):
+    """Custom Widget: A combination of inputs to generate a RangeSelector"""
     def __init__(self, *args, text=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self._outer_frame = tk.Frame(self)
-        self._outer_frame.pack(fill=tk.X, expand=True)
-
         self._label = tk.Label(self, text=text or "range")
-        self._label.pack(in_=self._outer_frame, side=tk.LEFT, fill=tk.X, expand=True)
+        self._label.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        self._inner_frame = tk.Frame(self)
-        self._inner_frame.pack(in_=self._outer_frame, side=tk.RIGHT, fill=tk.X, expand=True)
+        self._input_frame = tk.Frame(self)
+        self._input_frame.pack(side=tk.RIGHT, fill=tk.X, expand=True)
 
         self._start_frame = ttk.LabelFrame(self, text="from")
-        self._start_frame.pack(in_=self._inner_frame, side=tk.LEFT, fill=tk.X, expand=True)
+        self._start_frame.pack(in_=self._input_frame, side=tk.LEFT, fill=tk.X, expand=True)
 
         self._start_year = SelectBox(self, ["----"], set_default=True)
         self._start_year.pack(in_=self._start_frame, side=tk.LEFT, fill=tk.X, expand=True)
 
-        self._start_group = SelectBox(self, ["--", *map(str, range(1, 35))], set_default=True)
+        self._start_group = SelectBox(self, ["--"], set_default=True)
         self._start_group.pack(in_=self._start_frame, side=tk.RIGHT, fill=tk.X, expand=True)
 
         self._end_frame = ttk.LabelFrame(self, text="until")
-        self._end_frame.pack(in_=self._inner_frame, side=tk.RIGHT, fill=tk.X, expand=True)
+        self._end_frame.pack(in_=self._input_frame, side=tk.RIGHT, fill=tk.X, expand=True)
 
         self._end_year = SelectBox(self, ["----"], set_default=True)
         self._end_year.pack(in_=self._end_frame, side=tk.LEFT, fill=tk.X, expand=True)
 
-        self._end_group = SelectBox(self, ["--", *map(str, range(1, 35))], set_default=True)
+        self._end_group = SelectBox(self, ["--"], set_default=True)
         self._end_group.pack(in_=self._end_frame, side=tk.RIGHT, fill=tk.X, expand=True)
 
         self.add_tracer(self._tracer)
         self.populate_years()
+        self.populate_groups()
 
         self._range_selection = RangeSelector()
 
@@ -55,35 +54,26 @@ class RangeSelectorWidget(tk.Frame):
 
     @property
     def start_year_selection(self):
-        selection = self._start_year.selection
-        if selection is None or selection == "----":
-            return None
-        else:
-            return int(selection)
+        return self._clean_selection(self._start_year.selection)
 
     @property
     def end_year_selection(self):
-        selection = self._end_year.selection
-        if selection is None or selection == "----":
-            return None
-        else:
-            return int(selection)
+        return self._clean_selection(self._end_year.selection)
 
     @property
     def start_group_selection(self):
-        selection = self._start_group.selection
-        if selection is None or selection == "--":
-            return None
-        else:
-            return int(selection)
+        return self._clean_selection(self._start_group.selection)
 
     @property
     def end_group_selection(self):
-        selection = self._end_group.selection
-        if selection is None or selection == "--":
-            return None
-        else:
+        return self._clean_selection(self._end_group.selection)
+
+    @staticmethod
+    def _clean_selection(selection):
+        try:
             return int(selection)
+        except (ValueError, TypeError):
+            return None
 
     def _tracer(self, *args):
         try:
@@ -106,6 +96,10 @@ class RangeSelectorWidget(tk.Frame):
             years.sort()
             self._start_year.set_options(["----", *years], set_val="----")
             self._end_year.set_options(["----", *years], set_val="----")
+
+    def populate_groups(self):
+        self._start_group.set_options(["--", *map(str, range(1, 35))])
+        self._end_group.set_options(["--", *map(str, range(1, 35))])
 
     @property
     def selection(self):

@@ -71,6 +71,9 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self._host_team_list.fill()
         self._guest_team_list.fill()
 
+    def fill_range_selector(self):
+        self._range_selector_widget.populate_years()
+
     def _make_prediction(self):
         """Config collection for and starting of prediction job."""
         if self._work_lock.acquire(blocking=False):

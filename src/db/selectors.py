@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
@@ -43,7 +43,7 @@ class RangeSelector:
     @property
     def is_valid(self) -> bool:
         return (
-            RangeSelector._null_checked_lte(self._start.year, self._end.year) and
+            RangeSelector._null_checked_lte(self._start.year, self._end.year) and  # noqa W504
             (RangeSelector._null_checked_lte(self._start.group, self._end.group) if self._start.year == self._end.year else True)
         )
 
@@ -51,49 +51,14 @@ class RangeSelector:
     def _null_checked_lte(start: Optional[int], end: Optional[int]):
         return start is None or end is None or start <= end
 
-    def copy(self, other: RangeSelector) -> None:
+    def copy(self, other: RangeSelector) -> None:  # noqa: F821
         self._start = other._start
         self._end = other._end
 
-    def build_team_query(self) -> Query:
-        """Build a query for Teams with matches in selected timespace."""
-        filters = []
-        if not self._end.is_null():
-            if not self._end.is_partial():
-                filters.append(
-                    or_(
-                        Team.seasons.any(Season.year < self._end.year),
-                        and_(
-                            Team.seasons.any(Season.year == self._end.year),
-                            Team.match_participations.any(Group.order_id <= self._end.group)
-                        )
-                    ),
-                )
-            elif self._end.year is not None:
-                filters.append(
-                    Team.seasons.any(Season.year <= self._end.year)
-                )
-        if not self._start.is_null():
-            if not self._start.is_partial():
-                filters.append(
-                    or_(
-                        Team.seasons.any(Season.year > self._start.year),
-                        and_(
-                            Team.seasons.any(Season.year == self._start.year),
-                            Team.match_participations.any(Group.order_id >= self._start.group)
-                        )
-                    ),
-                )
-            elif self._start.year is not None:
-                filters.append(
-                    Team.seasons.any(Season.year >= self._start.year)
-                )
-        return Query(Team).join(MatchParticipation, Match, Group).filter(and_(*filters))
-
-    def build_match_query(self) -> Query:
-        """Build a query for Matches in selected timespace."""
+    def _build_filters(self) -> List:
+        """Build a list of filters to match data in timespace."""
         filters = [
-            Match.is_finished,
+            Match.is_finished
         ]
         if not self._end.is_null():
             if not self._end.is_partial():
@@ -125,4 +90,12 @@ class RangeSelector:
                 filters.append(
                     Season.year >= self._start.year
                 )
-        return Query(Match).join(Match.group, Group.season).filter(and_(*filters))
+        return filters
+
+    def build_team_query(self) -> Query:
+        """Build a query for Teams with matches in selected timespace."""
+        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(and_(*self._build_filters()))
+
+    def build_match_query(self) -> Query:
+        """Build a query for Matches in selected timespace."""
+        return Query(Match).join(Match.group, Group.season).filter(and_(*self._build_filters()))

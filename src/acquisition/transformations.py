@@ -1,4 +1,4 @@
-from typing import TypeVar, Callable, List, Type, overload, Dict, Any
+from typing import TypeVar, Callable, List, Type, overload, Dict, Any, Optional
 
 from sqlalchemy.orm import Session
 
@@ -83,13 +83,21 @@ def Gather(pipeline: Pipeline, data: Any, session: Session, *names: List[str]) -
 
 
 @Transformation.from_func
-def GetOrCreate(pipeline: Pipeline, data: Any, session: Session, model: Type[M]) -> M:
+def GetOrCreate(pipeline: Pipeline, data: Any, session: Session, model: Type[M], match_targets: Optional[List[str]] = None) -> M:
     """Get or create an instant model from data
 
     :param model: model to get or create an instance for
+    :param match_targets: fields to match on (default: None)
 
     """
-    kwargs = pipeline.generate_kwargs(model, data, session)
+    if match_targets is None:
+        kwargs = pipeline.generate_kwargs(model, data, session)
+    else:
+        kwargs = {
+            key: pipeline.generate_kwarg(model, key, data, session)
+            for key in match_targets
+        }
+
     instance = session.query(model).filter_by(**kwargs).first()
     if not instance:
         instance = model(**kwargs)  # type: ignore
