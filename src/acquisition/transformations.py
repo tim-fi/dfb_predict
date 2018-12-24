@@ -100,6 +100,8 @@ def GetOrCreate(pipeline: Pipeline, data: Any, session: Session, model: Type[M],
 
     instance = session.query(model).filter_by(**kwargs).first()
     if not instance:
+        if match_targets is not None:
+            kwargs = pipeline.generate_kwargs(model, data, session)
         instance = model(**kwargs)  # type: ignore
         session.add(instance)
         session.commit()
