@@ -92,14 +92,18 @@ class PredictionTab(Tab, verbose_name="prediction"):
 
     def _prediction_job(self, host_id, guest_id, predictor):
         with self._work_lock, DB.get_session() as session:
-            predictor.calculate_model(self._selector, session)
-            host_name = session.query(Team).filter_by(id=host_id).first().name
-            guest_name = session.query(Team).filter_by(id=guest_id).first().name
-            result = predictor.make_prediction(host_name, guest_name)
-            self._result_text.config(state=tk.NORMAL)
-            self._result_text.delete('1.0', tk.END)
-            self._result_text.insert(tk.END, str(result))
-            self._result_text.config(state=tk.DISABLED)
+            try:
+                predictor.calculate_model(self._selector, session)
+                host_name = session.query(Team).filter_by(id=host_id).first().name
+                guest_name = session.query(Team).filter_by(id=guest_id).first().name
+                result = predictor.make_prediction(host_name, guest_name)
+            except Exception as e:
+                tk.messagebox.showerror(type(e).__name__, e.args[0])
+            else:
+                self._result_text.config(state=tk.NORMAL)
+                self._result_text.delete('1.0', tk.END)
+                self._result_text.insert(tk.END, str(result))
+                self._result_text.config(state=tk.DISABLED)
 
 
 """

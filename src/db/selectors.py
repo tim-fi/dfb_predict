@@ -21,6 +21,21 @@ class RangePoint:
     year: Optional[int] = None
     group: Optional[int] = None
 
+    @classmethod
+    def parse_from_string(cls, s: Optional[str]) -> RangePoint:
+        """Parse a RangePoint from a string
+
+        This function parses a RangePoint from a string
+        following the format: "<year>[/<group>]"
+
+        :param s: the string to parse
+        :returns: the parsed RangePoint
+
+        """
+        year = None if s is None else int(s) if "/" not in s else int(s[:4])
+        group = None if s is None or "/" not in s else int(s[5:])
+        return cls(year, group)
+
     def is_null(self):
         return self.year is None and self.group is None
 
@@ -39,6 +54,14 @@ class RangeSelector:
         self._end = end or RangePoint()
         if not self.is_valid:
             raise TypeError(f"Invalid selection:\nfrom {start} to {end}")
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
 
     @property
     def is_valid(self) -> bool:
