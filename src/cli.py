@@ -88,20 +88,7 @@ def predict(host, guest, predictor, start, end):
     """Make prediction for two given teams."""
     predictor = Predictor.registry[predictor]()
     with DB.get_session() as session:
-        start = RangePoint.parse_from_string(start)
-        end = RangePoint.parse_from_string(end)
-
-        errors = []
-        if start.year is not None and session.query(Season).filter(Season.year >= start.year).count() < 1:
-            errors.append(f"Couldn't find any year >= {start.year} in database.")
-        if end.year is not None and session.query(Season).filter(Season.year <= end.year).count() < 1:
-            errors.append(f"Couldn't find any year <= {end.year} in database.")
-        if start.group is not None and start.group not in range(1, 35):
-            errors.append(f"Group of lower bound must be in 1..34. Not {start.group}...")
-        if end.group is not None and end.group not in range(1, 35):
-            errors.append(f"Group of upper bound must be in 1..34. Not {end.group}...")
-        selector = RangeSelector(start, end)
-
+        selector, errors = handle_selector(start, end, session)
         team_query = selector.build_team_query()
         host_candidates = list(team_query.filter(or_(Team.name.contains(host), Team.name.ilike(host))).with_session(session))
         guest_candidates = list(team_query.filter(or_(Team.name.contains(guest), Team.name.ilike(guest))).with_session(session))
@@ -125,22 +112,54 @@ def predict(host, guest, predictor, start, end):
             print(predictor.make_prediction(host_name, guest_name))
 
 
+def handle_selector(start, end, session):
+    start = RangePoint.parse_from_string(start)
+    end = RangePoint.parse_from_string(end)
+
+    errors = []
+    if start.year is not None and session.query(Season).filter(Season.year >= start.year).count() < 1:
+        errors.append(f"Couldn't find any year >= {start.year} in database.")
+    if end.year is not None and session.query(Season).filter(Season.year <= end.year).count() < 1:
+        errors.append(f"Couldn't find any year <= {end.year} in database.")
+    if start.group is not None and start.group not in range(1, 35):
+        errors.append(f"Group of lower bound must be in 1..34. Not {start.group}...")
+    if end.group is not None and end.group not in range(1, 35):
+        errors.append(f"Group of upper bound must be in 1..34. Not {end.group}...")
+    return RangeSelector(start, end), errors
+
+
 @db.group()
 def query():
     ...
 
 
 @query.command()
-def matches():
-    selector = RangeSelector(
-        start=RangePoint(),
-        end=RangePoint()
-    )
+def seasons():
     with DB.get_session() as session:
-        print(*selector.build_match_query().with_session(session), sep="\n")
+        print("Downloaded seasons:", ", ".join(str(season.year) for season in session.query(Season).all()))
 
 
 @query.command()
-def teams():
+@click.option("-s", "--start", type=str, default=None, help="Lower time constraint of data. Format: <year>[/<group>]")
+@click.option("-e", "--end", type=str, default=None, help="Upper time constraint of data. Format: <year>[/<group>]")
+def matches(start, end):
     with DB.get_session() as session:
-        print(*session.query(Team).all(), sep="\n")
+        selector, errors = handle_selector(start, end, session)
+        if len(errors) > 0:
+            for error in errors:
+                print("ERR:", error)
+        else:
+            print(*selector.build_match_query().with_session(session), sep="\n")
+
+
+@query.command()
+@click.option("-s", "--start", type=str, default=None, help="Lower time constraint of data. Format: <year>[/<group>]")
+@click.option("-e", "--end", type=str, default=None, help="Upper time constraint of data. Format: <year>[/<group>]")
+def teams(start, end):
+    with DB.get_session() as session:
+        selector, errors = handle_selector(start, end, session)
+        if len(errors) > 0:
+            for error in errors:
+                print("ERR:", error)
+        else:
+            print(*selector.build_team_query().with_session(session), sep="\n")
