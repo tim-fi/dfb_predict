@@ -83,7 +83,7 @@ class Pipeline(Generic[M]):
 class Transformation(metaclass=ABCMeta):
     """
     A transformation represents a single function or
-    chain thereof with the sole purpose to transform/"mung" data.
+    chain thereof with the sole purpose to transform/"munge" data.
     """
     def __init__(self, *args, **kwargs) -> None:
         # this 'cast' to a list from the normal tuple is done to support the
@@ -128,7 +128,7 @@ class Transformation(metaclass=ABCMeta):
             (Transformation,),
             {
                 "apply": staticmethod(func),
-                "__docs__": func.__doc__
+                "__doc__": func.__doc__
             }
         )
         return new_type

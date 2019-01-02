@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..db import Model
 from ..db.models import Match, Team, Season, Group, MatchParticipation
 from .core import Pipeline
-from .transformations import Get, Custom, Filter, GetOrCreate, CreateMultiple
+from .transformations import Get, Custom, Filter, GetOrCreate, CreateMultiple, If, Constant
 
 
 __all__ = (
@@ -42,8 +42,16 @@ pipeline: Pipeline[Model] = Pipeline({
             {"MatchID": data["MatchID"], "Team": data["Team1"], "hosted": True},
             {"MatchID": data["MatchID"], "Team": data["Team2"], "hosted": False},
         ]) | CreateMultiple(MatchParticipation),
-        "host_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | Get(0) | Get("PointsTeam1"),
-        "guest_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | Get(0) | Get("PointsTeam2"),
+        "host_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | If(
+            cond=lambda data: len(data) > 1,
+            then=Get(0) | Get("PointsTeam1"),
+            else_=Constant(0)
+        ),
+        "guest_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | If(
+            cond=lambda data: len(data) > 1,
+            then=Get(0) | Get("PointsTeam2"),
+            else_=Constant(0)
+        ),
     }
 })
 

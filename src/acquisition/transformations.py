@@ -1,4 +1,4 @@
-from typing import TypeVar, Callable, List, Type, overload, Dict, Any, Optional
+from typing import TypeVar, Callable, List, Type, overload, Dict, Any, Optional, Sequence, Mapping, Iterable
 
 from sqlalchemy.orm import Session
 
@@ -13,7 +13,9 @@ __all__ = (
     "Gather",
     "GetOrCreate",
     "Create",
-    "CreateMultiple"
+    "CreateMultiple",
+    "If",
+    "Constant",
 )
 
 
@@ -23,12 +25,12 @@ M = TypeVar("M")
 
 
 @overload
-def Get(pipeline, data: Dict[K, T], session, key: K) -> T:
+def Get(pipeline, data: Mapping[K, T], session, key: K) -> T:
     ...
 
 
 @overload  # noqa: F811
-def Get(pipeline, data: List[T], session, key: int) -> T:
+def Get(pipeline, data: Sequence[T], session, key: int) -> T:
     ...
 
 
@@ -44,12 +46,22 @@ def Get(pipeline: Pipeline, data, session: Session, key):
 
 @Transformation.from_func
 def Custom(pipeline: Pipeline, data: T, session: Session, func: Callable[[T], K]) -> K:
-    """ Apply custom function
+    """Apply custom function
 
     :param func: custom func to apply
 
     """
     return func(data)
+
+
+@Transformation.from_func
+def Constant(pipeline: Pipeline, data: Any, session: Session, constant: T) -> T:
+    """Return a constant
+
+    :param constant: constant to return
+
+    """
+    return constant
 
 
 @Transformation.from_func
@@ -63,23 +75,50 @@ def Attr(pipeline: Pipeline, data: Any, session: Session, key: str) -> Any:
 
 
 @Transformation.from_func
-def Filter(pipeline: Pipeline, data: List[T], session: Session, pred: Callable[[T], bool]) -> List[T]:
-    """Filter a given list via a predicate
+def Filter(pipeline: Pipeline, data: Iterable[T], session: Session, pred: Callable[[T], bool]) -> List[T]:
+    """Filter a list via a predicate
 
     :param pred: predicate to filter by
 
     """
-    return [row for row in data if pred(row)]
+    return [x for x in iter(data) if pred(x)]
 
 
 @Transformation.from_func
-def Gather(pipeline: Pipeline, data: Any, session: Session, *names: List[str]) -> Dict:
+def Map(pipeline: Pipeline, data: Iterable[T], session: Session, func: Callable[[T], K]) -> List[K]:
+    """Apply a function to each element in list
+
+    :param func: func to apply
+
+    """
+    return [func(x) for x in iter(data)]
+
+
+@Transformation.from_func
+def Gather(pipeline: Pipeline, data: Mapping[T, K], session: Session, *names: Sequence[T]) -> Dict[T, K]:
     """Gather multiple different values into a list
 
     :param names: keywords to reference
 
     """
     return {name: data[name] for name in names}
+
+
+@Transformation.from_func
+def If(pipeline: Pipeline, data: T, session: Session, cond: Callable[[T], bool], then: Transformation, else_: Optional[Transformation] = None) -> Any:
+    """Condtionally execute or branch between Transformations
+
+    :param cond: the condition on which to branch/execute
+    :param then: Transformation to execute on True-case
+    :param else_: Transformation to execute on False-case (default: None)
+
+    """
+    if cond(data):
+        return then(pipeline, data, session)
+    elif else_ is not None:
+        return else_(pipeline, data, session)
+    else:
+        return None
 
 
 @Transformation.from_func
@@ -122,7 +161,7 @@ def Create(pipeline: Pipeline, data: Any, session: Session, model: Type[M]) -> M
 
 
 @Transformation.from_func
-def CreateMultiple(pipeline: Pipeline, data: Any, session: Session, model: Type[M]) -> List[M]:
+def CreateMultiple(pipeline: Pipeline, data: Sequence[Any], session: Session, model: Type[M]) -> List[M]:
     """Create multiple instances of a  model from data
 
     :param model: model to create an instances for
