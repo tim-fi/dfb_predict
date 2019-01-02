@@ -43,12 +43,12 @@ pipeline: Pipeline[Model] = Pipeline({
             {"MatchID": data["MatchID"], "Team": data["Team2"], "hosted": False},
         ]) | CreateMultiple(MatchParticipation),
         "host_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | If(
-            cond=lambda data: len(data) > 1,
+            cond=lambda data: len(data) > 0,
             then=Get(0) | Get("PointsTeam1"),
             else_=Constant(0)
         ),
         "guest_points": Get("MatchResults") | Filter(lambda item: "end" in item["ResultName"].lower()) | If(
-            cond=lambda data: len(data) > 1,
+            cond=lambda data: len(data) > 0,
             then=Get(0) | Get("PointsTeam2"),
             else_=Constant(0)
         ),
