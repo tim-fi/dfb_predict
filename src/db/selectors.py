@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 
-from .models import Group, Season, Match, Team
+from .models import Group, Season, Match, Team, MatchParticipation
 
 
 __all__ = (
@@ -13,14 +15,26 @@ __all__ = (
 )
 
 
-base_query = Query(Match).join(Match.group, Group.season)
-
-
 @dataclass
 class RangePoint:
     """Edge of a selection"""
     year: Optional[int] = None
     group: Optional[int] = None
+
+    @classmethod
+    def parse_from_string(cls, s: Optional[str]) -> RangePoint:
+        """Parse a RangePoint from a string
+
+        This function parses a RangePoint from a string
+        following the format: "<year>[/<group>]"
+
+        :param s: the string to parse
+        :returns: the parsed RangePoint
+
+        """
+        year = None if s is None else int(s) if "/" not in s else int(s[:4])
+        group = None if s is None or "/" not in s else int(s[5:])
+        return cls(year, group)
 
     def is_null(self):
         return self.year is None and self.group is None
@@ -28,41 +42,83 @@ class RangePoint:
     def is_partial(self):
         return (self.year is None) ^ (self.group is None)
 
+    def __str__(self):
+        return f"{self.year}{f'/{self.group}' if self.group is not None else ''}"
+
 
 class RangeSelector:
     """Complete selection"""
+
     def __init__(self, start: RangePoint = None, end: RangePoint = None) -> None:
         self._start = start or RangePoint()
         self._end = end or RangePoint()
+        if not self.is_valid:
+            raise TypeError(f"Invalid selection:\nfrom {start} to {end}")
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
+
+    @property
+    def is_valid(self) -> bool:
+        return (
+            RangeSelector._null_checked_lte(self._start.year, self._end.year) and  # noqa W504
+            (RangeSelector._null_checked_lte(self._start.group, self._end.group) if self._start.year == self._end.year else True)
+        )
+
+    @staticmethod
+    def _null_checked_lte(start: Optional[int], end: Optional[int]):
+        return start is None or end is None or start <= end
+
+    def copy(self, other: RangeSelector) -> None:  # noqa: F821
+        self._start = other._start
+        self._end = other._end
+
+    def _build_filters(self) -> List:
+        """Build a list of filters to match data in timespace."""
+        filters = [
+            Match.is_finished
+        ]
+        if not self._end.is_null():
+            if not self._end.is_partial():
+                filters.append(
+                    or_(
+                        Season.year < self._end.year,
+                        and_(
+                            Season.year == self._end.year,
+                            Group.order_id <= self._end.group
+                        )
+                    ),
+                )
+            elif self._end.year is not None:
+                filters.append(
+                    Season.year <= self._end.year
+                )
+        if not self._start.is_null():
+            if not self._start.is_partial():
+                filters.append(
+                    or_(
+                        Season.year > self._start.year,
+                        and_(
+                            Season.year == self._start.year,
+                            Group.order_id >= self._start.group
+                        )
+                    ),
+                )
+            elif self._start.year is not None:
+                filters.append(
+                    Season.year >= self._start.year
+                )
+        return filters
 
     def build_team_query(self) -> Query:
-        """Build a query for Teams in selected timespace."""
-        return Query(Team)
+        """Build a query for Teams with matches in selected timespace."""
+        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(and_(*self._build_filters()))
 
     def build_match_query(self) -> Query:
         """Build a query for Matches in selected timespace."""
-        filters = [
-            Match.is_finished,
-        ]
-        if not self._end.is_null() and not self._end.is_partial():
-            filters.append(
-                or_(
-                    Season.year < self._end.year,
-                    and_(
-                        Season.year == self._end.year,
-                        Group.order_id <= self._end.group
-                    )
-                ),
-            )
-        if not self._start.is_null() and not self._start.is_partial():
-            filters.append(
-                or_(
-                    Season.year > self._start.year,
-                    and_(
-                        Season.year == self._start.year,
-                        Group.order_id >= self._start.group
-                    )
-                )
-            )
-
-        return base_query.filter(and_(*filters))
+        return Query(Match).join(Match.group, Group.season).filter(and_(*self._build_filters()))

@@ -54,6 +54,18 @@ class Pipeline(Generic[M]):
             for key, transformation in self._transformations[model].items()
         }
 
+    def generate_kwarg(self, model: Type[M], key: str, data: Any, session: Session) -> Any:
+        """Generate a single kwarg for model instantiation based on the given data
+        and the predefined transformation map
+
+        :param model: target model
+        :param key: the kwarg to generate
+        :param data: data to use in creation process
+        :param session: DB session to use for queries
+
+        """
+        return self._transformations[model][key](self, data, session)
+
     def create_multiple(self, model: Type[M], data: Any, session: Session) -> Generator[M, None, None]:
         """Create multiple instances of a given model based on the given data
 
@@ -71,7 +83,7 @@ class Pipeline(Generic[M]):
 class Transformation(metaclass=ABCMeta):
     """
     A transformation represents a single function or
-    chain thereof with the sole purpose to transform/"mung" data.
+    chain thereof with the sole purpose to transform/"munge" data.
     """
     def __init__(self, *args, **kwargs) -> None:
         # this 'cast' to a list from the normal tuple is done to support the
@@ -116,7 +128,7 @@ class Transformation(metaclass=ABCMeta):
             (Transformation,),
             {
                 "apply": staticmethod(func),
-                "__docs__": func.__doc__
+                "__doc__": func.__doc__
             }
         )
         return new_type

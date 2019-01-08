@@ -53,6 +53,18 @@ class PoissonResult(PredictionResult):
 
 
 class PoissonPredictor(Predictor, verbose_name="poisson"):
+    """Poisson Regression
+
+    This predictor uses Poisson Regression via an adapted implementation of
+    https://dashee87.github.io/football/python/predicting-football-results-with-statistical-modelling/.
+    There are a few edge cases which can't properley be represented with this
+    model though:
+    1. If the selected source data only contains 1 group for each
+       season, a perfect seperation error will pop up.
+    2. If the selected source data is to sparse, i.e. only 5 groups
+       per season, the predictions will be unreliable.
+
+    """
     def __init__(self) -> None:
         self._model = None
 

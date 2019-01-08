@@ -13,20 +13,21 @@ class Match(Model):
     __tablename__ = "matches"
 
     date = Column(DateTime)
-
     is_finished = Column(Boolean)
 
     group_id = Column(Integer, ForeignKey("groups.id"))
     group = relationship("Group", backref="matches")
 
-    host_id = Column(Integer, ForeignKey("teams.id"))
-    host = relationship("Team", backref="hosted_matches", primaryjoin="Match.host_id == Team.id")
-
-    guest_id = Column(Integer, ForeignKey("teams.id"))
-    guest = relationship("Team", backref="guest_matches", primaryjoin="Match.guest_id == Team.id")
-
     host_points = Column(Integer)
     guest_points = Column(Integer)
+
+    @property
+    def host(self):
+        return [part.team for part in self.match_participations if part.hosted][0]
+
+    @property
+    def guest(self):
+        return [part.team for part in self.match_participations if not part.hosted][0]
 
     def __repr__(self) -> str:
         return f"<Match(datetime={self.date}, host={str(self.host)}, guest={str(self.guest)}, host_points={self.host_points}, guest_points={self.guest_points})>"
