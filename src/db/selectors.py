@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List
 
 from sqlalchemy import and_, or_
@@ -48,12 +48,19 @@ class RangePoint:
 
 class RangeSelector:
     """Complete selection"""
+    __slots__ = ("_start", "_end")
 
-    def __init__(self, start: RangePoint = None, end: RangePoint = None) -> None:
+    def __eq__(self, other: RangePoint) -> bool:
+        return isinstance(other, RangeSelector) and self._start == other._start and self._end == other._end
+
+    def __neq__(self, other: RangePoint) -> bool:
+        return not isinstance(other, RangeSelector) or self._start != other._start or self._end != other._end
+
+    def __init__(self, start: Optional[RangePoint] = None, end: Optional[RangePoint] = None) -> None:
         self._start = start or RangePoint()
         self._end = end or RangePoint()
         if not self.is_valid:
-            raise TypeError(f"Invalid selection:\nfrom {start} to {end}")
+            raise TypeError(f"Invalid selection:\nfrom {self.start} to {self.end}")
 
     @property
     def start(self):
@@ -78,7 +85,7 @@ class RangeSelector:
         self._start = other._start
         self._end = other._end
 
-    def _build_filters(self) -> List:
+    def build_filters(self):
         """Build a list of filters to match data in timespace."""
         filters = [
             Match.is_finished
@@ -113,12 +120,12 @@ class RangeSelector:
                 filters.append(
                     Season.year >= self._start.year
                 )
-        return filters
+        return and_(*filters)
 
     def build_team_query(self) -> Query:
         """Build a query for Teams with matches in selected timespace."""
-        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(and_(*self._build_filters()))
+        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(self.build_filters())
 
     def build_match_query(self) -> Query:
         """Build a query for Matches in selected timespace."""
-        return Query(Match).join(Match.group, Group.season).filter(and_(*self._build_filters()))
+        return Query(Match).join(Match.group, Group.season).filter(self.build_filters())

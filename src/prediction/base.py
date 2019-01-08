@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple, List
 
 from sqlalchemy.orm import Session
 

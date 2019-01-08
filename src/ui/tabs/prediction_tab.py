@@ -65,6 +65,8 @@ class PredictionTab(Tab, verbose_name="prediction"):
 
     def _range_tracer(self, *args):
         self._selector.copy(self._range_selector_widget.selection)
+        for predictor in self._predictors.values():
+            predictor.trained = False
         self.fill_team_lists()
 
     def fill_team_lists(self):
@@ -93,7 +95,9 @@ class PredictionTab(Tab, verbose_name="prediction"):
     def _prediction_job(self, host_id, guest_id, predictor):
         with self._work_lock, DB.get_session() as session:
             try:
-                predictor.calculate_model(self._selector, session)
+                if not hasattr(Predictor, "trained") or not predictor.trained:
+                    predictor.calculate_model(self._selector, session)
+                    setattr(predictor, "trained", True)
                 host_name = session.query(Team).filter_by(id=host_id).first().name
                 guest_name = session.query(Team).filter_by(id=guest_id).first().name
                 result = predictor.make_prediction(host_name, guest_name)
