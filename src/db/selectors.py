@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional, List
+from dataclasses import dataclass
+from typing import Optional
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
@@ -61,6 +61,20 @@ class RangeSelector:
         self._end = end or RangePoint()
         if not self.is_valid:
             raise TypeError(f"Invalid selection:\nfrom {self.start} to {self.end}")
+
+    def __str__(self):
+        end_null = self._end.is_null()
+        start_null = self._start.is_null()
+        if start_null and end_null:
+            return "all"
+        elif start_null and not end_null:
+            return f"until {str(self._end)}"
+        elif not start_null and end_null:
+            return f"from {str(self._start)}"
+        elif self._end != self._start:
+            return f"from {str(self._start)} until {str(self._end)}"
+        else:
+            return str(self._start)
 
     @property
     def start(self):

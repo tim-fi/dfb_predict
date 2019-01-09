@@ -23,9 +23,18 @@ class ScrollableList(tk.Frame):
         super().pack(*args, **{**kwargs, "padx": 0, "pady": 0})
 
     def set_values(self, elements):
-        self.delete(0, tk.END)
+        self.clear()
+        self.extend(*elements)
+
+    def extend(self, *elements):
         for element in elements:
-            self.insert(tk.END, element)
+            self.append(element)
+
+    def append(self, element):
+        self.insert(tk.END, element)
+
+    def clear(self):
+        self.delete(0, tk.END)
 
     def insert(self, index, *elements):
         self._list.insert(index, *elements)
