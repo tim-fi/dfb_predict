@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from itertools import cycle
 
 from .base import Tab
 from ..jobs import ThreadJob
@@ -111,7 +112,10 @@ class ModelFrame(ttk.LabelFrame):
         self._predictor_selectbox = SelectBox(self.master, choices=list(Predictor.registry.keys()), label="Choose prediction method")
         self._predictor_selectbox.pack(in_=self, fill=tk.X, expand=True)
 
-        self._training_button = ttk.Button(self.master, text="build model", command=ThreadJob(self._training_job))
+        self._button_label = tk.StringVar()
+        self._button_label.set("build model")
+
+        self._training_button = ttk.Button(self.master, textvariable=self._button_label, command=ThreadJob(self._training_job))
         self._training_button.pack(in_=self, fill=tk.X, expand=True)
 
         self.master.bind_all("<<NewData>>", self._update_range, add="+")
@@ -120,6 +124,19 @@ class ModelFrame(ttk.LabelFrame):
         self._range_selector_widget.populate_years()
 
     def _training_job(self):
+        done = False
+        animation = iter(cycle([
+            "|", "/", "-", "\\"
+        ]))
+
+        def _loading_animation():
+            if not done:
+                self._button_label.set(next(animation))
+                self.after(100, _loading_animation)
+            else:
+                self._button_label.set("done")
+                self.after(500, lambda: self._button_label.set("build model"))
+
         predictor_name = self._predictor_selectbox.selection
         selector = self._range_selector_widget.selection
         if predictor_name is None:
@@ -127,11 +144,13 @@ class ModelFrame(ttk.LabelFrame):
         elif not selector.is_valid:
             tk.messagebox.showerror("Error", "Please make sure that your selection is sensible.")
         else:
+            _loading_animation()
             model = Predictor.registry[predictor_name]()
             with DB.get_session() as session:
                 model.calculate_model(selector, session)
             setattr(model, "selector", selector)
             self.master.models[f"{predictor_name} ({str(selector)})"] = model
+            done = True
 
 
 class PredictionConfigFrame(ttk.LabelFrame):
