@@ -1,4 +1,5 @@
-import multiprocessing as mp
+from __future__ import annotations
+from typing import Dict
 
 import pandas as pd
 import numpy as np
@@ -8,17 +9,18 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from ..db import RangeSelector, Match
-from .base import Predictor
+from .base import Model
 from .poisson import PoissonResult
 
 
 __all__ = (
-    "DixonColesPredictor",
+    "DixonColesModel",
 )
 
 
-class DixonColesPredictor(Predictor, verbose_name="dixon-coles"):
-    def calculate_model(self, selector: RangeSelector, session: Session) -> None:
+class DixonColesModel(Model, verbose_name="dixon-coles"):
+    @staticmethod
+    def calculate_model(selector: RangeSelector, session: Session) -> Dict[str, float]:
         team_query = selector.build_team_query().with_session(session)
         num_of_teams = team_query.count()
         teams = [team.name for team in team_query]
@@ -60,7 +62,7 @@ class DixonColesPredictor(Predictor, verbose_name="dixon-coles"):
                 [0.03, 0.06]
             ),
             options={
-                'disp': True,
+                # 'disp': True,
                 'maxiter': 100,
             },
             constraints=[{
@@ -69,19 +71,20 @@ class DixonColesPredictor(Predictor, verbose_name="dixon-coles"):
             }]
         )
 
-        self._model = dict(zip(
+        features = dict(zip(
             ["attack_" + team for team in teams] +
             ["defence_" + team for team in teams] +
             ['score_correction', 'home_advantage'],
             min_result.x
         ))
 
-        print(*[f"{key}: {item}" for key, item in self._model.items()], sep="\n")
+        # print(*[f"{key}: {item}" for key, item in model.items()], sep="\n")
+        return features
 
     def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
         team_avgs = [
-            np.exp(self._model[f"attack_{host_name}"] + self._model[f"defence_{guest_name}"] + self._model["home_advantage"]),
-            np.exp(self._model[f"attack_{guest_name}"] + self._model[f"defence_{host_name}"]),
+            np.exp(self.features[f"attack_{host_name}"] + self.features[f"defence_{guest_name}"] + self.features["home_advantage"]),
+            np.exp(self.features[f"attack_{guest_name}"] + self.features[f"defence_{host_name}"]),
         ]
 
         output_matrix = np.outer(*[
@@ -91,7 +94,7 @@ class DixonColesPredictor(Predictor, verbose_name="dixon-coles"):
 
         correction_matrix = np.array([
             [
-                apply_score_correction(host_goals, guest_goals, team_avgs[0], team_avgs[1], self._model['score_correction'])
+                apply_score_correction(host_goals, guest_goals, team_avgs[0], team_avgs[1], self.features['score_correction'])
                 for guest_goals in range(2)
             ]
             for host_goals in range(2)

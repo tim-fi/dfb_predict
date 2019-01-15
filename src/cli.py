@@ -5,7 +5,7 @@ from sqlalchemy import or_
 from .db import DB
 from .db.models import *  # noqa: F401
 from .db.selectors import RangePoint, RangeSelector
-from .prediction import Predictor
+from .prediction import Model
 from .acquisition import download_matches, clean_download_list, get_current_groups_matches
 from .ui import App
 
@@ -81,12 +81,11 @@ def download(years, drop):
 @cli.command()
 @click.argument("host", type=str, nargs=1)
 @click.argument("guest", type=str, nargs=1)
-@click.option("-p", "--predictor", type=click.Choice(Predictor.registry.keys()), default=list(Predictor.registry.keys())[0], help="The predictor to use.")
+@click.option("-m", "--model", type=click.Choice(Model.registry.keys()), default=list(Model.registry.keys())[0], help="The model to use.")
 @click.option("-s", "--start", type=str, default=None, help="Lower time constraint of data. Format: <year>[/<group>]")
 @click.option("-e", "--end", type=str, default=None, help="Upper time constraint of data. Format: <year>[/<group>]")
-def predict(host, guest, predictor, start, end):
+def predict(host, guest, model, start, end):
     """Make prediction for two given teams."""
-    predictor = Predictor.registry[predictor]()
     with DB.get_session() as session:
         selector, errors = handle_selector(start, end, session)
         team_query = selector.build_team_query()
@@ -106,10 +105,10 @@ def predict(host, guest, predictor, start, end):
             print(f"\nOptions for teams:")
             print(*["> " + str(team) for team in team_query.with_session(session)], sep="\n")
         else:
-            predictor.calculate_model(RangeSelector(start, end), session)
+            model = Model.registry[model](selector, session)
             host_name = host_candidates[0].name
             guest_name = guest_candidates[0].name
-            print(predictor.make_prediction(host_name, guest_name))
+            print(model.make_prediction(host_name, guest_name))
 
 
 def handle_selector(start, end, session):

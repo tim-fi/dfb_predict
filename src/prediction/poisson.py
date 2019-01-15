@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 import pandas as pd
@@ -8,11 +10,11 @@ import statsmodels.formula.api as smf
 from sqlalchemy.orm import Session
 
 from ..db import RangeSelector
-from .base import Predictor, PredictionResult
+from .base import Model, PredictionResult
 
 
 __all__ = (
-    "PoissonPredictor",
+    "PoissonModel",
     "PoissonResult"
 )
 
@@ -52,10 +54,10 @@ class PoissonResult(PredictionResult):
         ])
 
 
-class PoissonPredictor(Predictor, verbose_name="poisson"):
+class PoissonModel(Model, verbose_name="poisson"):
     """Poisson Regression
 
-    This predictor uses Poisson Regression via an adapted implementation of
+    This model uses Poisson Regression via an adapted implementation of
     https://dashee87.github.io/football/python/predicting-football-results-with-statistical-modelling/.
     There are a few edge cases which can't properley be represented with this
     model though:
@@ -65,10 +67,8 @@ class PoissonPredictor(Predictor, verbose_name="poisson"):
        per season, the predictions will be unreliable.
 
     """
-    def __init__(self) -> None:
-        self._model = None
-
-    def calculate_model(self, selector: RangeSelector, session: Session) -> None:
+    @staticmethod
+    def calculate_model(selector: RangeSelector, session: Session):
         dfs = [
             {
                 "host": match.host.name,
@@ -109,21 +109,23 @@ class PoissonPredictor(Predictor, verbose_name="poisson"):
             ),
         ], sort=False)
 
-        self._model = smf.glm(
+        features = smf.glm(
             formula="goals ~ home + team + opponent",
             data=goal_model,
             family=sm.families.Poisson()
         ).fit()
 
+        return features
+
     def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
-        host_goals_avg = self._model.predict(
+        host_goals_avg = self.features.predict(
             pd.DataFrame(data={
                 "team": host_name,
                 "opponent": guest_name,
                 "home": 1
             }, index=[1])
         ).values[0]
-        guest_goals_avg = self._model.predict(
+        guest_goals_avg = self.features.predict(
             pd.DataFrame(data={
                 "team": guest_name,
                 "opponent": host_name,

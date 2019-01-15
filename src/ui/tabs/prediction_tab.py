@@ -5,7 +5,7 @@ from itertools import cycle
 from .base import Tab
 from ..jobs import ThreadJob
 from ..widgets import QueryList, SelectBox, RangeSelectorWidget, ScrollableText, ScrollableList
-from ...prediction import Predictor
+from ...prediction import Model
 from ...db import DB, RangeSelector
 
 
@@ -109,8 +109,8 @@ class ModelFrame(ttk.LabelFrame):
         self._range_selector_widget = RangeSelectorWidget(self.master, text="Daterange")
         self._range_selector_widget.pack(in_=self, fill=tk.X, expand=True)
 
-        self._predictor_selectbox = SelectBox(self.master, choices=list(Predictor.registry.keys()), label="Choose prediction method")
-        self._predictor_selectbox.pack(in_=self, fill=tk.X, expand=True)
+        self._model_selectbox = SelectBox(self.master, choices=list(Model.registry.keys()), label="Choose prediction method")
+        self._model_selectbox.pack(in_=self, fill=tk.X, expand=True)
 
         self._button_label = tk.StringVar()
         self._button_label.set("build model")
@@ -137,19 +137,18 @@ class ModelFrame(ttk.LabelFrame):
                 self._button_label.set("done")
                 self.after(500, lambda: self._button_label.set("build model"))
 
-        predictor_name = self._predictor_selectbox.selection
+        model_name = self._model_selectbox.selection
         selector = self._range_selector_widget.selection
-        if predictor_name is None:
+        if model_name is None:
             tk.messagebox.showerror("Error", "Please select a model to train/calculate.")
         elif not selector.is_valid:
             tk.messagebox.showerror("Error", "Please make sure that your selection is sensible.")
         else:
             _loading_animation()
-            model = Predictor.registry[predictor_name]()
             with DB.get_session() as session:
-                model.calculate_model(selector, session)
+                model = Model.registry[model_name](selector, session)
             setattr(model, "selector", selector)
-            self.master.models[f"{predictor_name} ({str(selector)})"] = model
+            self.master.models[f"{model_name} ({str(selector)})"] = model
             done = True
 
 
