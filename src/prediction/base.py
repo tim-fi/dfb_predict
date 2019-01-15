@@ -1,6 +1,8 @@
-from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass
-from typing import Optional
+from __future__ import annotations
+
+from abc import ABCMeta, abstractmethod, abstractstaticmethod
+from dataclasses import dataclass, InitVar, field
+from typing import Optional, Type, ClassVar, Dict, Any, TypeVar
 
 from sqlalchemy.orm import Session
 
@@ -8,9 +10,11 @@ from ..db import RangeSelector
 
 
 __all__ = (
-    "Predictor",
+    "Model",
     "PredictionResult"
 )
+
+T = TypeVar('T')
 
 
 @dataclass(frozen=True)
@@ -34,6 +38,10 @@ class PredictionResult:
     def guest_win(self):
         return self.guest_win_propability > self.host_win_propability and self.guest_win_propability > self.draw_propability
 
+    @property
+    def reliability(self):
+        return max(0, 1 - abs(self.host_win_propability + self.guest_win_propability + self.draw_propability - 1))
+
     def __str__(self):
         return "\n".join([
             "----------------------------------------",
@@ -45,17 +53,26 @@ class PredictionResult:
             f" * guest win: {self.guest_win_propability:.1%}",
             f" -> Most propable outcome: {['draw', 'host win', 'guest win'][(self.host_win + self.guest_win * 2 + self.draw * 3) % 3]}",
             "----------------------------------------",
+            f"Reliability: {self.reliability:.1%}",
+            "----------------------------------------",
         ])
 
 
-class Predictor(metaclass=ABCMeta):
-    registry = dict()
+@dataclass
+class Model(metaclass=ABCMeta):
+    registry: ClassVar[Dict[str, Type[Model]]] = dict()
+    features: Any = field(init=False)
+    selector: RangeSelector
+    session: InitVar[Session]
 
     def __init_subclass__(cls, verbose_name: Optional[str] = None) -> None:
-        Predictor.registry[verbose_name or cls.__name__] = cls
+        Model.registry[verbose_name or cls.__name__] = cls
 
-    @abstractmethod
-    def calculate_model(self, selector: RangeSelector, session: Session) -> None:
+    def __post_init__(self, session: Session) -> None:
+        self.features = self.calculate_model(self.selector, session)
+
+    @abstractstaticmethod
+    def calculate_model(selector: RangeSelector, session: Session) -> Any:
         raise NotImplementedError()
 
     @abstractmethod

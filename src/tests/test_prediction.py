@@ -1,10 +1,10 @@
 import unittest
 
 from ..db.core import _DB
-from ..db.selectors import RangeSelector
+from ..db.selectors import RangeSelector, RangePoint
 from ..db.models import *  # noqa: 401
 from ..acquisition import download_matches
-from ..prediction import PoissonPredictor
+from ..prediction import PoissonModel, DixonColesModel
 
 
 class TestPrediction(unittest.TestCase):
@@ -17,11 +17,10 @@ class TestPrediction(unittest.TestCase):
             session.add_all(list(download_matches(session, [2016])))
 
     def test_poisson(self):
-        """>>> Test the poisson prediction algorithm."""
-        p = PoissonPredictor()
+        """>>> Test the Poisson Regression prediction method."""
         with self.DB.get_session() as session:
-            p.calculate_model(RangeSelector(), session)
-        result_obj = p.make_prediction("FC Bayern", "Borussia Dortmund")
+            model = PoissonModel(RangeSelector(), session)
+        result_obj = model.make_prediction("FC Bayern", "Borussia Dortmund")
 
         assert all(
             round(actual, 2) == expected
@@ -30,3 +29,13 @@ class TestPrediction(unittest.TestCase):
                 (0.73, 0.16, 0.11)
             )
         ), f"Result wasn't what we expected... {result} != {expected_result}"
+
+    def test_dixoncoles(self):
+        """>>> Test the Dixon-Coles prediction method."""
+        with self.DB.get_session() as session:
+            model = DixonColesModel(RangeSelector(
+                RangePoint(2016, 30), RangePoint(2016, 34)
+            ), session)
+        result_obj = model.make_prediction("FC Bayern", "Borussia Dortmund")
+
+        assert result_obj is not None, "Result didn't compute..."

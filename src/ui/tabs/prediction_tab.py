@@ -1,11 +1,12 @@
 import tkinter as tk
 import tkinter.ttk as ttk
-from threading import Thread, RLock
+from itertools import cycle
 
 from .base import Tab
-from ..widgets import QueryList, SelectBox, RangeSelectorWidget
-from ...prediction import Predictor
-from ...db import DB, Team, RangeSelector
+from ..jobs import ThreadJob
+from ..widgets import QueryList, SelectBox, RangeSelectorWidget, ScrollableText, ScrollableList
+from ...prediction import Model
+from ...db import DB, RangeSelector
 
 
 __all__ = (
@@ -16,101 +17,193 @@ __all__ = (
 class PredictionTab(Tab, verbose_name="prediction"):
     """This tab contains all things related to making predictions."""
     def create_widgets(self):
-        self._selector = RangeSelector()
+        self.models = {}
+        self._num_of_models = len(self.models)
+        self.text = ""
+        self._hash_of_text = hash(self.text)
+        self.prediction_jobs = []
+        self._num_of_pjobs = len(self.prediction_jobs)
 
         self._control_frame = tk.Frame(self)
-        self._control_frame.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+        self._control_frame.pack(fill=tk.BOTH, expand=True)
 
-        self._team_select_label_frame = tk.Frame(self)
-        self._team_select_label_frame.pack(in_=self._control_frame, fill=tk.BOTH, expand=True)
+        self._control_division = tk.Frame(self)
+        self._control_division.pack(in_=self._control_frame, side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self._host_team_label = ttk.Label(self, text="Host:")
-        self._host_team_label.pack(in_=self._team_select_label_frame, fill=tk.X, expand=True, side=tk.LEFT)
+        self._model_frame = ModelFrame(self)
+        self._model_frame.pack(in_=self._control_division, fill=tk.X)
 
-        self._guest_team_label = ttk.Label(self, text="Guest:")
-        self._guest_team_label.pack(in_=self._team_select_label_frame, fill=tk.X, expand=True, side=tk.RIGHT)
+        self._prediction_config_frame = PredictionConfigFrame(self)
+        self._prediction_config_frame.pack(in_=self._control_division, fill=tk.X)
 
-        self._team_select_frame = tk.Frame(self)
-        self._team_select_frame.pack(in_=self._control_frame, fill=tk.BOTH, expand=True)
+        self._prediction_queue_frame = PredictionQueueFrame(self)
+        self._prediction_queue_frame.pack(in_=self._control_frame, side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        self._host_team_list = QueryList(self, self._selector.build_team_query, selectmode=tk.SINGLE)
-        self._host_team_list.pack(in_=self._team_select_frame, fill=tk.BOTH, expand=True, side=tk.LEFT)
+        self._output_frame = OutputFrame(self)
+        self._output_frame.pack(fill=tk.BOTH, expand=True)
 
-        self._guest_team_list = QueryList(self, self._selector.build_team_query, selectmode=tk.SINGLE)
-        self._guest_team_list.pack(in_=self._team_select_frame, fill=tk.BOTH, expand=True, side=tk.RIGHT)
+        self._generate_events()
 
-        self._range_selector_widget = RangeSelectorWidget(self, text="Daterange")
-        self._range_selector_widget.pack(in_=self._control_frame, fill=tk.X, expand=True)
-        self._range_selector_widget.add_tracer(self._range_tracer)
+    def _generate_events(self):
+        if len(self.models) != self._num_of_models:
+            self.event_generate("<<NewModel>>")
+            self._num_of_models = len(self.models)
+        if hash(self.text) != self._hash_of_text:
+            self.event_generate("<<NewText>>")
+            self._hash_of_text = hash(self.text)
+        if len(self.prediction_jobs) != self._num_of_pjobs:
+            self.event_generate("<<NewPrediction>>")
+            self._num_of_pjobs = len(self.prediction_jobs)
+        self.after(50, self._generate_events)
 
-        self._predictor_selectbox = SelectBox(self, choices=list(Predictor.registry.keys()), label="Choose prediction method")
-        self._predictor_selectbox.pack(in_=self._control_frame, fill=tk.X, expand=True)
 
-        self._prediction_trigger = ttk.Button(self, text="predict", command=self._make_prediction)
-        self._prediction_trigger.pack(in_=self._control_frame, fill=tk.X, expand=True)
+class OutputFrame(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self._predictors = {
-            name: predictor_class()
-            for name, predictor_class in Predictor.registry.items()
-        }
+        self._text = ScrollableText(self.master, height=10, width=50)
+        self._text.pack(in_=self, fill=tk.BOTH, expand=True)
+        self._text.lock_text()
 
-        self._work_lock = RLock()
+        self.master.bind("<<NewText>>", self._update_text, add="+")
 
-        self._result_frame = tk.Frame(self)
-        self._result_frame.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT)
+    def _update_text(self, event):
+        self._text.unlock_text()
+        self._text.set_text(self.master.text)
+        self._text.lock_text()
 
-        self._result_text = tk.Text(self, height=10, width=50)
-        self._result_text.pack(in_=self._result_frame, fill=tk.BOTH, expand=True)
-        self._result_text.config(state=tk.DISABLED)
 
-    def _range_tracer(self, *args):
-        self._selector.copy(self._range_selector_widget.selection)
-        self.fill_team_lists()
+class PredictionQueueFrame(ttk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, text="Prediction Queue", **kwargs)
 
-    def fill_team_lists(self):
+        self._job_list = ScrollableList(self.master)
+        self._job_list.pack(in_=self, fill=tk.BOTH, expand=True)
+
+        self._trigger = ttk.Button(self.master, text="execute queue", command=ThreadJob(self._prediction_job))
+        self._trigger.pack(in_=self, fill=tk.X)
+
+        self.master.bind("<<NewPrediction>>", self._update_jobs, add="+")
+
+    def _update_jobs(self, event):
+        self._job_list.set_values([f"{host_name} vs {guest_name} via {model}" for host_name, guest_name, model in self.master.prediction_jobs])
+
+    def _prediction_job(self):
+        self.master.text = ""
+        results = []
+        for host_name, guest_name, model in self.master.prediction_jobs:
+            model = self.master.models[model]
+            try:
+                results.append(model.make_prediction(host_name, guest_name))
+            except Exception as e:
+                self.master.text = e.args[0]
+                return
+        self.master.text = "\n".join([str(result) for result in results])
+        self.master.prediction_jobs = []
+
+
+class ModelFrame(ttk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, text="Model", **kwargs)
+
+        self._range_selector_widget = RangeSelectorWidget(self.master, text="Daterange")
+        self._range_selector_widget.pack(in_=self, fill=tk.X, expand=True)
+
+        self._model_selectbox = SelectBox(self.master, choices=list(Model.registry.keys()), label="Choose prediction method")
+        self._model_selectbox.pack(in_=self, fill=tk.X, expand=True)
+
+        self._button_label = tk.StringVar()
+        self._button_label.set("build model")
+
+        self._training_button = ttk.Button(self.master, textvariable=self._button_label, command=ThreadJob(self._training_job))
+        self._training_button.pack(in_=self, fill=tk.X, expand=True)
+
+        self.master.bind_all("<<NewData>>", self._update_range, add="+")
+
+    def _update_range(self, event):
+        self._range_selector_widget.populate_years()
+
+    def _training_job(self):
+        done = False
+        animation = iter(cycle([
+            "|", "/", "-", "\\"
+        ]))
+
+        def _loading_animation():
+            if not done:
+                self._button_label.set(next(animation))
+                self.after(100, _loading_animation)
+            else:
+                self._button_label.set("done")
+                self.after(500, lambda: self._button_label.set("build model"))
+
+        model_name = self._model_selectbox.selection
+        selector = self._range_selector_widget.selection
+        if model_name is None:
+            tk.messagebox.showerror("Error", "Please select a model to train/calculate.")
+        elif not selector.is_valid:
+            tk.messagebox.showerror("Error", "Please make sure that your selection is sensible.")
+        else:
+            _loading_animation()
+            with DB.get_session() as session:
+                model = Model.registry[model_name](selector, session)
+            setattr(model, "selector", selector)
+            self.master.models[f"{model_name} ({str(selector)})"] = model
+            done = True
+
+
+class PredictionConfigFrame(ttk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, text="Prediction", **kwargs)
+        self._selector = RangeSelector()
+
+        self._label_frame = tk.Frame(self.master)
+        self._label_frame.pack(in_=self, fill=tk.BOTH, expand=True)
+
+        self._host_team_label = ttk.Label(self.master, text="Host:")
+        self._host_team_label.pack(in_=self._label_frame, fill=tk.X, expand=True, side=tk.LEFT)
+
+        self._guest_team_label = ttk.Label(self.master, text="Guest:")
+        self._guest_team_label.pack(in_=self._label_frame, fill=tk.X, expand=True, side=tk.RIGHT)
+
+        self._team_frame = tk.Frame(self.master)
+        self._team_frame.pack(in_=self, fill=tk.BOTH, expand=True)
+
+        self._host_team_list = QueryList(self.master, lambda: self._selector.build_team_query(), selectmode=tk.SINGLE, target_field="name")
+        self._host_team_list.pack(in_=self._team_frame, fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        self._guest_team_list = QueryList(self.master, lambda: self._selector.build_team_query(), selectmode=tk.SINGLE, target_field="name")
+        self._guest_team_list.pack(in_=self._team_frame, fill=tk.BOTH, expand=True, side=tk.RIGHT)
+
+        self._model_selection = SelectBox(self.master, ["---"], "Choose model:")
+        self._model_selection.pack(in_=self, fill=tk.X, expand=True)
+        self._model_selection.add_tracer(self._model_tracer)
+
+        self._trigger = ttk.Button(self.master, text="queue prediction", command=ThreadJob(self._prediction_config_job))
+        self._trigger.pack(in_=self, fill=tk.X, expand=True)
+
+        self.master.bind("<<NewModel>>", self._update_models, add="+")
+
+    def _update_models(self, event):
+        self._model_selection.set_options(self.master.models.keys())
+
+    def _model_tracer(self, *args):
+        selected_model = self._model_selection.selection
+        if not selected_model:
+            self._selector = RangeSelector()
+        else:
+            self._selector = self.master.models[selected_model].selector
         self._host_team_list.fill()
         self._guest_team_list.fill()
 
-    def fill_range_selector(self):
-        self._range_selector_widget.populate_years()
+    def _prediction_config_job(self):
+        host_id = self._host_team_list.get_cur()
+        guest_id = self._guest_team_list.get_cur()
+        model = self._model_selection.selection
 
-    def _make_prediction(self):
-        """Config collection for and starting of prediction job."""
-        if self._work_lock.acquire(blocking=False):
-            host_id = self._host_team_list.get_cur()
-            guest_id = self._guest_team_list.get_cur()
-            predictor = self._predictor_selectbox.selection
-
-            if host_id is None or guest_id is None:
-                tk.messagebox.showerror("Error", "Please select teams to make a prediction...")
-            elif predictor is None:
-                tk.messagebox.showerror("Error", "Please select a prediction method.")
-            else:
-                Thread(target=self._prediction_job, args=(host_id[0], guest_id[0], self._predictors[predictor])).start()
-
-            self._work_lock.release()
-
-    def _prediction_job(self, host_id, guest_id, predictor):
-        with self._work_lock, DB.get_session() as session:
-            try:
-                predictor.calculate_model(self._selector, session)
-                host_name = session.query(Team).filter_by(id=host_id).first().name
-                guest_name = session.query(Team).filter_by(id=guest_id).first().name
-                result = predictor.make_prediction(host_name, guest_name)
-            except Exception as e:
-                tk.messagebox.showerror(type(e).__name__, e.args[0])
-            else:
-                self._result_text.config(state=tk.NORMAL)
-                self._result_text.delete('1.0', tk.END)
-                self._result_text.insert(tk.END, str(result))
-                self._result_text.config(state=tk.DISABLED)
-
-
-"""
-Iterate through all matches (with rematches...):
-
-for i, host in enumerate(teams):
-    for guest in teams[i+1:]:
-        print(f"Game [>] - {host} vs {guest}")
-        print(f"Game [<] - {guest} vs {host}")
-"""
+        if host_id is None or guest_id is None:
+            tk.messagebox.showerror("Error", "Please select teams to make a prediction...")
+        elif model is None:
+            tk.messagebox.showerror("Error", "Please select a prediction method.")
+        else:
+            self.master.prediction_jobs.append((host_id[0], guest_id[0], model))
