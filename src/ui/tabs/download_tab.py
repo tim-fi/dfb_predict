@@ -1,9 +1,11 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from itertools import cycle
 
 from .base import Tab
 from ..jobs import ThreadJob
-from ..widgets import ScrollableList, LabeledProgressbar
+from ..widgets import ScrollableList, LabeledProgressbar, SelectBox, RangeSelectorWidget
+from ...prediction import Model
 from ...db import DB
 from ...acquisition import download_matches, clean_download_list
 
@@ -15,6 +17,16 @@ __all__ = (
 
 class DownloadTab(Tab, verbose_name="download"):
     def create_widgets(self):
+        self._model_frame = ModelFrame(self.master)
+        self._model_frame.pack(in_=self, fill=tk.X)
+
+        self._download_frame = DownloadFrame(self.master)
+        self._download_frame.pack(in_=self, fill=tk.BOTH, expand=True)
+
+
+class DownloadFrame(ttk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, text="Download", **kwargs)
         self._year_list = ScrollableList(self, selectmode=tk.MULTIPLE)
         self._year_list.pack(fill=tk.BOTH, expand=True)
 
@@ -26,7 +38,7 @@ class DownloadTab(Tab, verbose_name="download"):
 
         self._current_year_selection = []
 
-        self.bind("<<NewData>>", self._update_years, add="+")
+        self.bind_all("<<NewData>>", self._update_years, add="+")
         self.event_generate("<<NewData>>")
         self._poll_list()
 
@@ -69,3 +81,53 @@ class DownloadTab(Tab, verbose_name="download"):
             self._progressbar.set_label("done")
         finally:
             self._progressbar.set_value(0)
+
+
+class ModelFrame(ttk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, text="Model", **kwargs)
+
+        self._range_selector_widget = RangeSelectorWidget(self.master, text="Daterange")
+        self._range_selector_widget.pack(in_=self, fill=tk.X, expand=True)
+
+        self._model_selectbox = SelectBox(self.master, choices=list(Model.registry.keys()), label="Choose prediction method")
+        self._model_selectbox.pack(in_=self, fill=tk.X, expand=True)
+
+        self._button_label = tk.StringVar()
+        self._button_label.set("build model")
+
+        self._training_button = ttk.Button(self.master, textvariable=self._button_label, command=ThreadJob(self._training_job))
+        self._training_button.pack(in_=self, fill=tk.X, expand=True)
+
+        self.master.bind_all("<<NewData>>", self._update_range, add="+")
+
+    def _update_range(self, event):
+        self._range_selector_widget.populate_years()
+
+    def _training_job(self):
+        done = False
+        animation = iter(cycle([
+            "|", "/", "-", "\\"
+        ]))
+
+        def _loading_animation():
+            if not done:
+                self._button_label.set(next(animation))
+                self.after(100, _loading_animation)
+            else:
+                self._button_label.set("done")
+                self.after(500, lambda: self._button_label.set("build model"))
+
+        model_name = self._model_selectbox.selection
+        selector = self._range_selector_widget.selection
+        if model_name is None:
+            tk.messagebox.showerror("Error", "Please select a model to train/calculate.")
+        elif not selector.is_valid:
+            tk.messagebox.showerror("Error", "Please make sure that your selection is sensible.")
+        else:
+            _loading_animation()
+            with DB.get_session() as session:
+                model = Model.registry[model_name](selector, session)
+            setattr(model, "selector", selector)
+            self.master.models[f"{model_name} ({str(selector)})"] = model
+            done = True
