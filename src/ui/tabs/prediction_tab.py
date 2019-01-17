@@ -2,6 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 from .base import Tab
+from ..data import AppData
 from ..jobs import ThreadJob
 from ..widgets import QueryList, SelectBox, ScrollableText, ScrollableList, RangePointSelectorWidget
 from ...db import DB, RangeSelector, Match, Group, Season
@@ -40,7 +41,7 @@ class PredictionTab(Tab, verbose_name="prediction"):
         self.master.bind("<<NewModel>>", self._update_models, add="+")
 
     def _update_models(self, event):
-        self._model_selection.set_options(self.master.models.keys())
+        self._model_selection.set_options(AppData.models.keys())
 
     def _model_tracer(self, *args):
         self.event_generate("<<NewModelSelected>>")
@@ -58,7 +59,7 @@ class OutputFrame(tk.Frame):
 
     def _update_text(self, event):
         self._text.unlock_text()
-        self._text.set_text(self.master.text)
+        self._text.set_text(AppData.text)
         self._text.lock_text()
 
 
@@ -75,21 +76,20 @@ class PredictionQueueFrame(ttk.LabelFrame):
         self.bind_all("<<NewPrediction>>", self._update_jobs, add="+")
 
     def _update_jobs(self, event):
-        self._job_list.set_values([f"{host_name} vs {guest_name} via {model}" for host_name, guest_name, model in self.master.master.prediction_jobs])
+        self._job_list.set_values([f"{host_name} vs {guest_name} via {model}" for host_name, guest_name, model in AppData.prediction_jobs])
 
     def _prediction_job(self):
-        self.master.master.text = ""
+        AppData.text = ""
         results = []
-        for host_name, guest_name, model in self.master.master.prediction_jobs:
-            print(host_name, guest_name, model)
-            model = self.master.master.models[model]
+        for host_name, guest_name, model in AppData.prediction_jobs:
+            model = AppData.models[model]
             try:
                 results.append(model.make_prediction(host_name, guest_name))
             except Exception as e:
                 self.master.text = e.args[0]
                 return
-        self.master.master.text = "\n".join([str(result) for result in results])
-        self.master.master.prediction_jobs = []
+        AppData.text = "\n".join([str(result) for result in results])
+        AppData.prediction_jobs = []
 
 
 class PredictionConfigFrame(ttk.LabelFrame):
@@ -123,7 +123,7 @@ class PredictionConfigFrame(ttk.LabelFrame):
     def _model_updated(self, *args):
         model = self.master._model_selection.selection
         if model is not None:
-            self._selector.copy(self.master.master.models[model].selector)
+            self._selector.copy(AppData.models[model].selector)
             self._host_team_list.fill()
             self._guest_team_list.fill()
 
@@ -137,7 +137,7 @@ class PredictionConfigFrame(ttk.LabelFrame):
         elif model is None:
             tk.messagebox.showerror("Error", "Please select a prediction method.")
         else:
-            self.master.master.prediction_jobs.append((host[0], guest[0], model))
+            AppData.prediction_jobs.append((host[0], guest[0], model))
 
 
 class QueuePopulateFrame(ttk.LabelFrame):
@@ -156,20 +156,17 @@ class QueuePopulateFrame(ttk.LabelFrame):
 
     def _model_updated(self, *args):
         with DB.get_session() as session:
-            selector = self.master.master.models[self.master._model_selection.selection].selector
+            selector = AppData.models[self.master._model_selection.selection].selector
             self._direct_selector.set_years([
                 season.year
-                for season in session.query(Season).filter(
-                    Season.year >= selector.start.year,
-                    Season.year <= selector.end.year
-                )
+                for season in session.query(Season).filter(selector.build_filters(ignore_groups=True))
             ])
 
     def _direct_selection_job(self):
         with DB.get_session() as session:
             selection = self._direct_selector.selection
             model = self.master._model_selection.selection
-            self.master.master.prediction_jobs.extend((
+            AppData.prediction_jobs.extend((
                 (match.host.name, match.guest.name, model)
                 for match in session.query(Match).join(Match.group, Group.season).filter(
                     Group.order_id == selection.group,

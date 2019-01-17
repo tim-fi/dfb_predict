@@ -1,6 +1,7 @@
 import tkinter as tk
 
 from .tabs import Tabs
+from .data import AppData
 
 
 class App(tk.Frame):
@@ -11,28 +12,14 @@ class App(tk.Frame):
         parent.title("DFB Predict")
         self.pack()
 
-        self.models = {}
-        self._num_of_models = len(self.models)
-        self.text = ""
-        self._hash_of_text = hash(self.text)
-        self.prediction_jobs = []
-        self._num_of_pjobs = len(self.prediction_jobs)
-
         self._tabs = Tabs(self)
         self._tabs.pack(fill=tk.BOTH, expand=True)
 
         self._generate_events()
 
     def _generate_events(self):
-        if len(self.models) != self._num_of_models:
-            self.event_generate("<<NewModel>>")
-            self._num_of_models = len(self.models)
-        if hash(self.text) != self._hash_of_text:
-            self.event_generate("<<NewText>>")
-            self._hash_of_text = hash(self.text)
-        if len(self.prediction_jobs) != self._num_of_pjobs:
-            self.event_generate("<<NewPrediction>>")
-            self._num_of_pjobs = len(self.prediction_jobs)
+        for event in AppData.gather_events():
+            self.event_generate(event)
         self.after(50, self._generate_events)
 
     @classmethod

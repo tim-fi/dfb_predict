@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 from itertools import cycle
 
 from .base import Tab
+from ..data import AppData
 from ..jobs import ThreadJob
 from ..widgets import ScrollableList, LabeledProgressbar, SelectBox, RangeSelectorWidget
 from ...prediction import Model
@@ -17,10 +18,10 @@ __all__ = (
 
 class DownloadTab(Tab, verbose_name="download"):
     def create_widgets(self):
-        self._model_frame = ModelFrame(self.master)
+        self._model_frame = ModelFrame(self)
         self._model_frame.pack(in_=self, fill=tk.X)
 
-        self._download_frame = DownloadFrame(self.master)
+        self._download_frame = DownloadFrame(self)
         self._download_frame.pack(in_=self, fill=tk.BOTH, expand=True)
 
 
@@ -129,5 +130,5 @@ class ModelFrame(ttk.LabelFrame):
             with DB.get_session() as session:
                 model = Model.registry[model_name](selector, session)
             setattr(model, "selector", selector)
-            self.master.models[f"{model_name} ({str(selector)})"] = model
+            AppData.models[f"{model_name} ({str(selector)})"] = model
             done = True
