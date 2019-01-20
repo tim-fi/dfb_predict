@@ -42,5 +42,4 @@ class Tabs(ttk.Notebook):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for label, tab_class in Tab.registry.items():
-            setattr(self.master, label, tab_class(self.master))
-            self.add(getattr(self.master, label), text=label, compound=tk.TOP)
+            self.add(tab_class(self), text=label, compound=tk.TOP)

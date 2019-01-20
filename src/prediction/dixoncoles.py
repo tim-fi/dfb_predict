@@ -23,13 +23,13 @@ class DixonColesModel(Model, verbose_name="dixon-coles"):
     def calculate_model(selector: RangeSelector, session: Session) -> Dict[str, float]:
         team_query = selector.build_team_query().with_session(session)
         num_of_teams = team_query.count()
-        teams = [team.name for team in team_query]
+        teams = [team.shortname for team in team_query]
 
         (max_date,) = session.query(func.max(Match.date)).filter(selector.build_filters()).first()
         dfs = [
             {
-                "host": teams.index(match.host.name),
-                "guest": teams.index(match.guest.name),
+                "host": teams.index(match.host.shortname),
+                "guest": teams.index(match.guest.shortname),
                 "host_goals": match.host_points,
                 "guest_goals": match.guest_points,
                 "time_diff": np.exp((max_date - match.date).days * 0.001),
@@ -78,8 +78,7 @@ class DixonColesModel(Model, verbose_name="dixon-coles"):
             min_result.x
         ))
 
-        # print(*[f"{key}: {item}" for key, item in model.items()], sep="\n")
-        return features
+        return features, teams
 
     def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
         team_avgs = [

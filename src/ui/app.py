@@ -13,9 +13,9 @@ class App(tk.Frame):
         self.pack()
 
         self._tabs = Tabs(self)
-        self._tabs.pack(fill=tk.BOTH, expand=True)
+        self._tabs.pack()
 
-        self._generate_events()
+        self.after(50, self._generate_events)
 
     def _generate_events(self):
         for event in AppData.gather_events():

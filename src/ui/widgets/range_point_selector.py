@@ -16,11 +16,11 @@ class RangePointSelectorWidget(ttk.LabelFrame):
     """Custom Widget: A combination of inputs to generate a RangeSelector"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._year = SelectBox(self, ["----"], set_default=True)
-        self._year.pack(in_=self, side=tk.LEFT, fill=tk.X, expand=True)
+        self._year = SelectBox(self, choices=["----"], set_default=True)
+        self._year.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        self._group = SelectBox(self, ["--"], set_default=True)
-        self._group.pack(in_=self, side=tk.RIGHT, fill=tk.X, expand=True)
+        self._group = SelectBox(self, choices=["--"], set_default=True)
+        self._group.pack(side=tk.RIGHT, fill=tk.X, expand=True)
 
         self.add_tracer(self._tracer)
         self.populate_years()

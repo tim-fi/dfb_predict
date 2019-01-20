@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass, InitVar, field
-from typing import Optional, Type, ClassVar, Dict, Any, TypeVar
+from typing import Optional, Type, ClassVar, Dict, Any, TypeVar, List, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -61,18 +61,19 @@ class PredictionResult:
 @dataclass
 class Model(metaclass=ABCMeta):
     registry: ClassVar[Dict[str, Type[Model]]] = dict()
-    features: Any = field(init=False)
     selector: RangeSelector
     session: InitVar[Session]
+    features: Any = field(init=False)
+    teams: List[str] = field(init=False)
 
     def __init_subclass__(cls, verbose_name: Optional[str] = None) -> None:
         Model.registry[verbose_name or cls.__name__] = cls
 
     def __post_init__(self, session: Session) -> None:
-        self.features = self.calculate_model(self.selector, session)
+        self.features, self.teams = self.calculate_model(self.selector, session)
 
     @abstractstaticmethod
-    def calculate_model(selector: RangeSelector, session: Session) -> Any:
+    def calculate_model(selector: RangeSelector, session: Session) -> Tuple[Any, List[str]]:
         raise NotImplementedError()
 
     @abstractmethod
