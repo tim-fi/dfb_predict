@@ -71,8 +71,8 @@ class PoissonModel(Model, verbose_name="poisson"):
     def calculate_model(selector: RangeSelector, session: Session):
         dfs = [
             {
-                "host": match.host.name,
-                "guest": match.guest.name,
+                "host": match.host.shortname,
+                "guest": match.guest.shortname,
                 "host_goals": match.host_points,
                 "guest_goals": match.guest_points,
             }
@@ -115,7 +115,8 @@ class PoissonModel(Model, verbose_name="poisson"):
             family=sm.families.Poisson()
         ).fit()
 
-        return features
+        return features, list(goal_data["host"].unique())
+
 
     def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
         host_goals_avg = self.features.predict(

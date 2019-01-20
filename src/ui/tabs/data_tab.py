@@ -12,17 +12,24 @@ from ...acquisition import download_matches, clean_download_list
 
 
 __all__ = (
-    "DownloadTab",
+    "DataTab",
 )
 
 
-class DownloadTab(Tab, verbose_name="download"):
+class DataTab(Tab, verbose_name="data"):
+    """This tab contains all things related to the data/models used for predictions."""
     def create_widgets(self):
-        self._model_frame = ModelFrame(self)
-        self._model_frame.pack(in_=self, fill=tk.X)
+        self._model_frame = ttk.LabelFrame(self, text="Models")
+        self._model_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        self._model_create_frame = ModelCreateFrame(self)
+        self._model_create_frame.pack(in_=self._model_frame, fill=tk.X, expand=True)
+
+        self._model_manage_frame = ModelManageFrame(self)
+        self._model_manage_frame.pack(in_=self._model_frame, fill=tk.BOTH, expand=True)
 
         self._download_frame = DownloadFrame(self)
-        self._download_frame.pack(in_=self, fill=tk.BOTH, expand=True)
+        self._download_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 
 class DownloadFrame(ttk.LabelFrame):
@@ -39,8 +46,8 @@ class DownloadFrame(ttk.LabelFrame):
 
         self._current_year_selection = []
 
-        self.bind_all("<<NewData>>", self._update_years, add="+")
-        self.event_generate("<<NewData>>")
+        self.bind_all("<<DATA.YearsChanged>>", self._update_years, add="+")
+        self.event_generate("<<DATA.YearsChanged>>")
         self._poll_list()
 
     def _update_years(self, event):
@@ -78,29 +85,29 @@ class DownloadFrame(ttk.LabelFrame):
             self._progressbar.set_label("something went wrong...")
             raise
         else:
-            self.event_generate("<<NewData>>")
+            self.event_generate("<<DATA.YearsChanged>>")
             self._progressbar.set_label("done")
         finally:
             self._progressbar.set_value(0)
 
 
-class ModelFrame(ttk.LabelFrame):
+class ModelCreateFrame(ttk.LabelFrame):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, text="Model", **kwargs)
+        super().__init__(*args, text="Create", **kwargs)
 
-        self._range_selector_widget = RangeSelectorWidget(self.master, text="Daterange")
-        self._range_selector_widget.pack(in_=self, fill=tk.X, expand=True)
+        self._range_selector_widget = RangeSelectorWidget(self, text="Daterange")
+        self._range_selector_widget.pack(fill=tk.X)
 
-        self._model_selectbox = SelectBox(self.master, choices=list(Model.registry.keys()), label="Choose prediction method")
-        self._model_selectbox.pack(in_=self, fill=tk.X, expand=True)
+        self._model_selectbox = SelectBox(self, choices=list(Model.registry.keys()), label="Choose prediction method")
+        self._model_selectbox.pack(fill=tk.X)
 
         self._button_label = tk.StringVar()
         self._button_label.set("build model")
 
-        self._training_button = ttk.Button(self.master, textvariable=self._button_label, command=ThreadJob(self._training_job))
-        self._training_button.pack(in_=self, fill=tk.X, expand=True)
+        self._training_button = ttk.Button(self, textvariable=self._button_label, command=ThreadJob(self._training_job))
+        self._training_button.pack(fill=tk.X)
 
-        self.master.bind_all("<<NewData>>", self._update_range, add="+")
+        self.bind_all("<<DATA.YearsChanged>>", self._update_range, add="+")
 
     def _update_range(self, event):
         self._range_selector_widget.populate_years()
@@ -130,5 +137,47 @@ class ModelFrame(ttk.LabelFrame):
             with DB.get_session() as session:
                 model = Model.registry[model_name](selector, session)
             setattr(model, "selector", selector)
-            AppData.models[f"{model_name} ({str(selector)})"] = model
+            AppData.models.data[f"{model_name} ({str(selector)})"] = model
             done = True
+
+
+class ModelManageFrame(ttk.LabelFrame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, text="Manage", **kwargs)
+
+        self._model_list = ScrollableList(self, selectmode=tk.MULTIPLE, height=150)
+        self._model_list.pack(fill=tk.BOTH, expand=True)
+
+        self._button_frame = tk.Frame(self)
+        self._button_frame.pack(fill=tk.X, expand=True)
+
+        self._delete_button = ttk.Button(self, text="delete", command=self._delete_models)
+        self._delete_button.pack(in_=self._button_frame, side=tk.LEFT, fill=tk.X, expand=True)
+
+        self._file_button_frame = tk.Frame(self)
+        self._file_button_frame.pack(in_=self._button_frame, side=tk.RIGHT, fill=tk.X)
+
+        self._load_button = ttk.Button(self, text="load", command=self._load_models)
+        self._load_button.pack(in_=self._file_button_frame, side=tk.LEFT, fill=tk.X, expand=True)
+
+        self._save_button = ttk.Button(self, text="save", command=self._save_models)
+        self._save_button.pack(in_=self._file_button_frame, side=tk.RIGHT, fill=tk.X, expand=True)
+
+        self.bind_all("<<APPDATA.Models>>", self._models_updated, add="+")
+
+    def _models_updated(self, *args):
+        self._model_list.set_values(AppData.models.data.keys())
+
+    def _delete_models(self, *args):
+        selected_models = self._model_list.get_cur()
+        if selected_models is None:
+            tk.messagebox.showerror("Error", "Can't delete nothing...")
+        else:
+            for model in selected_models:
+                del AppData.models.data[model]
+
+    def _load_models(self, *args):
+        print("LOAD MODELS")
+
+    def _save_models(self, *args):
+        print("SAVE MODELS")

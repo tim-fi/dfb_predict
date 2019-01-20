@@ -11,8 +11,10 @@ __all__ = (
 
 class QueryList(ScrollableList):
     """Custom widget: listbox with autofill by db query"""
-    def __init__(self, parent, query, selectmode=None, target_field=None):
-        super().__init__(parent, selectmode=selectmode)
+    def __init__(self, *args, query=None, target_field=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if query is None:
+            raise ValueError("Must give a query.")
         self._query = query
         self._data = {}
         self._target_field = target_field or "id"

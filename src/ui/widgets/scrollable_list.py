@@ -8,19 +8,17 @@ __all__ = (
 
 class ScrollableList(tk.Frame):
     """Custom widget: listbox with scrollbar"""
-    def __init__(self, parent, selectmode=None):
-        super().__init__(parent)
-        self._scrollbar = tk.Scrollbar(parent, orient=tk.VERTICAL)
-        self._list = tk.Listbox(parent, selectmode=selectmode or tk.SINGLE, yscrollcommand=self._scrollbar.set, exportselection=0)
-        self._list.pack(in_=self, side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self._scrollbar.config(command=self._adjust_listbox_view)
-        self._scrollbar.pack(in_=self, side=tk.RIGHT, fill=tk.Y)
-
-    def _adjust_listbox_view(self, *args):
-        self._list.yview(*args)
+    def __init__(self, *args, selectmode=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._list = tk.Listbox(self, selectmode=selectmode or tk.SINGLE, exportselection=0)
+        self._scrollbar = tk.Scrollbar(self, orient=tk.VERTICAL, command=self._list.yview)
+        self._list["yscrollcommand"] = self._scrollbar.set
 
     def pack(self, *args, **kwargs):
-        super().pack(*args, **{**kwargs, "padx": 0, "pady": 0})
+        super().pack(*args, **kwargs)
+        self.pack_propagate(0)
+        self._scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self._list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     def set_values(self, elements):
         self.clear()
@@ -45,8 +43,7 @@ class ScrollableList(tk.Frame):
     def get(self, *indecies):
         if len(indecies) == 0:
             return None
-        vals = [self._list.get(i) for i in indecies]
-        return vals
+        return [self._list.get(i) for i in indecies]
 
     def curselection(self):
         return self._list.curselection()
