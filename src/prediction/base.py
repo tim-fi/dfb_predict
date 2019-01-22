@@ -3,10 +3,11 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass, InitVar, field
 from typing import Optional, Type, ClassVar, Dict, Any, TypeVar, List, Tuple
+import json
 
 from sqlalchemy.orm import Session
 
-from ..db import RangeSelector
+from ..db import RangeSelector, RangePoint
 
 
 __all__ = (
@@ -19,6 +20,7 @@ T = TypeVar('T')
 
 @dataclass(frozen=True)
 class PredictionResult:
+    model_type: str
     host_name: str
     guest_name: str
 
@@ -47,6 +49,8 @@ class PredictionResult:
             "----------------------------------------",
             f"Game: {self.host_name} vs. {self.guest_name}",
             "----------------------------------------",
+            f"Predicted via {self.model_type} model.",
+            "----------------------------------------",
             "General outcome propabilies:",
             f" * host win:  {self.host_win_propability:.1%}",
             f" * draw:      {self.draw_propability:.1%}",
@@ -61,13 +65,15 @@ class PredictionResult:
 @dataclass
 class Model(metaclass=ABCMeta):
     registry: ClassVar[Dict[str, Type[Model]]] = dict()
+    verbose_name: ClassVar[str] = ""
     selector: RangeSelector
     session: InitVar[Session]
     features: Any = field(init=False)
     teams: List[str] = field(init=False)
 
     def __init_subclass__(cls, verbose_name: Optional[str] = None) -> None:
-        Model.registry[verbose_name or cls.__name__] = cls
+        cls.verbose_name = verbose_name or cls.__name__
+        Model.registry[cls.verbose_name] = cls
 
     def __post_init__(self, session: Session) -> None:
         self.features, self.teams = self.calculate_model(self.selector, session)

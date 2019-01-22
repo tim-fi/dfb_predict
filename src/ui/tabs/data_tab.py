@@ -1,8 +1,11 @@
 import tkinter as tk
+from tkinter import filedialog
 import tkinter.ttk as ttk
 from itertools import cycle
 from multiprocessing import Process, Pipe
 from time import sleep
+import json
+import pickle
 
 from .base import Tab
 from ..data import AppData
@@ -144,7 +147,7 @@ class ModelManageFrame(ttk.LabelFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, text="Manage", **kwargs)
 
-        self._model_list = ScrollableList(self, selectmode=tk.MULTIPLE, height=150)
+        self._model_list = ScrollableList(self, selectmode=tk.SINGLE, height=150)
         self._model_list.pack(fill=tk.BOTH, expand=True)
 
         self._button_frame = tk.Frame(self)
@@ -168,15 +171,38 @@ class ModelManageFrame(ttk.LabelFrame):
         self._model_list.set_values(AppData.models.data.keys())
 
     def _delete_models(self, *args):
-        selected_models = self._model_list.get_cur()
-        if selected_models is None:
+        model = self._model_list.get_cur()
+        if model is None:
             tk.messagebox.showerror("Error", "Can't delete nothing...")
         else:
-            for model in selected_models:
-                del AppData.models.data[model]
+            del AppData.models.data[model[0]]
 
     def _load_models(self, *args):
-        print("LOAD MODELS")
+        file_name = filedialog.askopenfilename(
+            initialdir="/",
+            title="Select file",
+            filetypes=(
+                ("dfb files (json)", "*.dfb"),
+                ("json files", "*.json"),
+                ("all files", "*.*")
+            )
+        )
+        with open(file_name, "rb") as fp:
+            AppData.models.data[file_name] = pickle.load(fp)
 
     def _save_models(self, *args):
-        print("SAVE MODELS")
+        file_name = filedialog.asksaveasfilename(
+            initialdir="/",
+            title="Select file",
+            filetypes=(
+                ("dfb files (json)", "*.dfb"),
+                ("json files", "*.json"),
+                ("all files", "*.*")
+            )
+        )
+        model = self._model_list.get_cur()
+        if model is None:
+            tk.messagebox.showerror("Error", "Can't save nothing...")
+        else:
+            with open(file_name, "wb") as fp:
+                pickle.dump(AppData.models.data[model[0]], fp)
