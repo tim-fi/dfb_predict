@@ -1,6 +1,8 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from itertools import cycle
+from multiprocessing import Process, Pipe
+from time import sleep
 
 from .base import Tab
 from ..data import AppData
@@ -52,7 +54,7 @@ class DownloadFrame(ttk.LabelFrame):
 
     def _update_years(self, event):
         with DB.get_session() as session:
-            years_to_download, _ = clean_download_list(session, range(2002, 2019))
+            years_to_download, _ = clean_download_list(session, range(2003, 2019))
         self._year_list.set_values([f"{year}/{(year % 100 + 1):0>2d}" for year in years_to_download])
 
     def _poll_list(self):
@@ -113,18 +115,10 @@ class ModelCreateFrame(ttk.LabelFrame):
         self._range_selector_widget.populate_years()
 
     def _training_job(self):
-        done = False
-        animation = iter(cycle([
-            "|", "/", "-", "\\"
-        ]))
-
-        def _loading_animation():
-            if not done:
-                self._button_label.set(next(animation))
-                self.after(100, _loading_animation)
-            else:
-                self._button_label.set("done")
-                self.after(500, lambda: self._button_label.set("build model"))
+        def process_job(p: Pipe, model_class, selector):
+            with DB.get_session() as session:
+                p.send(model_class(selector, session))
+            p.close()
 
         model_name = self._model_selectbox.selection
         selector = self._range_selector_widget.selection
@@ -133,12 +127,17 @@ class ModelCreateFrame(ttk.LabelFrame):
         elif not selector.is_valid:
             tk.messagebox.showerror("Error", "Please make sure that your selection is sensible.")
         else:
-            _loading_animation()
-            with DB.get_session() as session:
-                model = Model.registry[model_name](selector, session)
-            setattr(model, "selector", selector)
-            AppData.models.data[f"{model_name} ({str(selector)})"] = model
-            done = True
+            p_out, p_in = Pipe(duplex=False)
+            p = Process(target=process_job, args=(p_in, Model.registry[model_name], selector))
+            p.start()
+            animation = iter(cycle(["|", "/", "-", "\\"]))
+            while not p_out.poll():
+                self._button_label.set(next(animation))
+                sleep(0.1)
+            AppData.models.data[f"{model_name} ({str(selector)})"] = p_out.recv()
+            p.join()
+            self._button_label.set("done")
+            self.after(500, lambda: self._button_label.set("build model"))
 
 
 class ModelManageFrame(ttk.LabelFrame):

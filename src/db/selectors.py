@@ -120,10 +120,10 @@ class RangeSelector:
             self._end.build_filter("l", ignore_groups=ignore_groups)
         )
 
-    def build_team_query(self) -> Query:
+    def build_team_query(self, *, ignore_groups: bool = False) -> Query:
         """Build a query for Teams with matches in selected timespace."""
-        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(Match.is_finished, self.build_filters())
+        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(Match.is_finished, self.build_filters(ignore_groups=ignore_groups))
 
-    def build_match_query(self) -> Query:
+    def build_match_query(self, *, ignore_groups: bool = False) -> Query:
         """Build a query for Matches in selected timespace."""
-        return Query(Match).join(Match.group, Group.season).filter(Match.is_finished, self.build_filters())
+        return Query(Match).join(Match.group, Group.season).filter(Match.is_finished, self.build_filters(ignore_groups=ignore_groups))

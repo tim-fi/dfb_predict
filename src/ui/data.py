@@ -40,14 +40,11 @@ class _AppData:
         field(init=False, default_factory=lambda: _AppDataField("<<APPDATA.PredictionJobs>>", [], len))
 
     def gather_events(self):
-        e = [
+        return [
             getattr(self, f.name).event
             for f in fields(self)
             if getattr(self, f.name).changed
         ]
-        if len(e) > 0:
-            print(e)
-        return e
 
 
 AppData = _AppData()
