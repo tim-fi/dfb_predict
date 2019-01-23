@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Dict
+import json
 
 import pandas as pd
 import numpy as np
@@ -102,6 +103,7 @@ class DixonColesModel(Model, verbose_name="dixon-coles"):
         output_matrix[:2, :2] = output_matrix[:2, :2] * correction_matrix
 
         return PoissonResult(
+            model_type=type(self).verbose_name,
             host_name=host_name,
             guest_name=guest_name,
             host_win_propability=np.sum(np.tril(output_matrix, -1)),
