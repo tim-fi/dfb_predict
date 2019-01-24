@@ -19,6 +19,7 @@ T = TypeVar('T')
 
 @dataclass(frozen=True)
 class PredictionResult:
+    selector: RangeSelector
     model_type: str
     host_name: str
     guest_name: str
@@ -49,6 +50,7 @@ class PredictionResult:
             f"Game: {self.host_name} vs. {self.guest_name}",
             "----------------------------------------",
             f"Predicted via {self.model_type} model.",
+            f"Data: {self.selector}",
             "----------------------------------------",
             "General outcome propabilies:",
             f" * host win:  {self.host_win_propability:.1%}",

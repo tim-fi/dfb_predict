@@ -59,9 +59,17 @@ class PredictionQueueFrame(ttk.LabelFrame):
         self._trigger.pack(fill=tk.X)
 
         self.bind_all("<<APPDATA.PredictionJobs>>", self._update_jobs, add="+")
+        self.bind_all("<<APPDATA.Models>>", self._clean_jobs, add="+")
 
     def _update_jobs(self, event):
         self._job_list.set_values([f"{host_name} vs {guest_name} via {model}" for host_name, guest_name, model in AppData.prediction_jobs.data])
+
+    def _clean_jobs(self, event):
+        AppData.prediction_jobs.data = [
+            (host, guest, model)
+            for host, guest, model in AppData.prediction_jobs.data
+            if model in AppData.models.data
+        ]
 
     def _prediction_job(self):
         def process_job(models, jobs):
@@ -170,11 +178,12 @@ class QueuePopulateFrame(ttk.LabelFrame):
         if not model:
             tk.messagebox.showerror("Error", "Please select a model to make the predictions with.")
         else:
-            season_name, group_id, matches = get_current_groups_matches()
+            _, _, matches = get_current_groups_matches()
             AppData.prediction_jobs.data.extend(
                 (host, guest, model) for host, guest in matches
                 if host in AppData.models.data[model].teams and guest in AppData.models.data[model].teams
             )
+
     def _model_updated(self, *args):
         with DB.get_session() as session:
             model = self.master._model_selection.selection
@@ -195,7 +204,7 @@ class QueuePopulateFrame(ttk.LabelFrame):
                 tk.messagebox.showerror("Error", "Please select a proper group to predict.")
             else:
                 AppData.prediction_jobs.data.extend((
-                    (match.host.shortname, match.guest.shortname, model)
+                    (match.host.name, match.guest.name, model)
                     for match in session.query(Match).join(Match.group, Group.season).filter(
                         Group.order_id == selection.group,
                         Season.year == selection.year

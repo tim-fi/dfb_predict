@@ -103,6 +103,7 @@ class DixonColesModel(Model, verbose_name="dixon-coles"):
         output_matrix[:2, :2] = output_matrix[:2, :2] * correction_matrix
 
         return PoissonResult(
+            selector=self.selector,
             model_type=type(self).verbose_name,
             host_name=host_name,
             guest_name=guest_name,

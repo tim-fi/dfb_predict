@@ -148,6 +148,7 @@ class PoissonModel(Model, verbose_name="poisson"):
         )
 
         return PoissonResult(
+            selector=self.selector,
             model_type=type(self).verbose_name,
             host_name=host_name,
             guest_name=guest_name,
