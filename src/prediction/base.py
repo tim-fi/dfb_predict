@@ -3,10 +3,6 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from dataclasses import dataclass, InitVar, field
 from typing import Optional, Type, ClassVar, Dict, Any, TypeVar, List, Tuple
-<<<<<<< HEAD
-=======
-import json
->>>>>>> 727cf36179d0d3f94458b620bcecd56ea9576a87
 
 from sqlalchemy.orm import Session
 
@@ -69,8 +65,10 @@ class PredictionResult:
 class Model(metaclass=ABCMeta):
     registry: ClassVar[Dict[str, Type[Model]]] = dict()
     verbose_name: ClassVar[str] = ""
+
     selector: RangeSelector
     session: InitVar[Session]
+
     features: Any = field(init=False)
     teams: List[str] = field(init=False)
 

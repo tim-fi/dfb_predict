@@ -72,8 +72,8 @@ class PoissonModel(Model, verbose_name="poisson"):
     def calculate_model(selector: RangeSelector, session: Session):
         dfs = [
             {
-                "host": match.host.shortname,
-                "guest": match.guest.shortname,
+                "host": match.host.name,
+                "guest": match.guest.name,
                 "host_goals": match.host_points,
                 "guest_goals": match.guest_points,
             }

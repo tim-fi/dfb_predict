@@ -1,10 +1,14 @@
+import pickle
+import os
 import tkinter as tk
+from tkinter import filedialog
 import tkinter.ttk as ttk
 from itertools import cycle
+from time import sleep
 
 from .base import Tab
 from ..data import AppData
-from ..jobs import ThreadJob
+from ..jobs import ThreadJob, ProcessFuture
 from ..widgets import ScrollableList, LabeledProgressbar, SelectBox, RangeSelectorWidget
 from ...prediction import Model
 from ...db import DB
@@ -113,18 +117,9 @@ class ModelCreateFrame(ttk.LabelFrame):
         self._range_selector_widget.populate_years()
 
     def _training_job(self):
-        done = False
-        animation = iter(cycle([
-            "|", "/", "-", "\\"
-        ]))
-
-        def _loading_animation():
-            if not done:
-                self._button_label.set(next(animation))
-                self.after(100, _loading_animation)
-            else:
-                self._button_label.set("done")
-                self.after(500, lambda: self._button_label.set("build model"))
+        def process_job(model_class, selector):
+            with DB.get_session() as session:
+                return model_class(selector, session)
 
         model_name = self._model_selectbox.selection
         selector = self._range_selector_widget.selection
@@ -133,19 +128,23 @@ class ModelCreateFrame(ttk.LabelFrame):
         elif not selector.is_valid:
             tk.messagebox.showerror("Error", "Please make sure that your selection is sensible.")
         else:
-            _loading_animation()
-            with DB.get_session() as session:
-                model = Model.registry[model_name](selector, session)
-            setattr(model, "selector", selector)
-            AppData.models.data[f"{model_name} ({str(selector)})"] = model
-            done = True
+            animation = iter(cycle(["|", "/", "-", "\\"]))
+            process = ProcessFuture(target=process_job, args=(Model.registry[model_name], selector))
+            process.start()
+            while not process.done:
+                self._button_label.set(next(animation))
+                sleep(.2)
+            AppData.models.data[f"{model_name} ({str(selector)})"] = process.result
+            process.join()
+            self._button_label.set("done")
+            self.after(500, lambda: self._button_label.set("build model"))
 
 
 class ModelManageFrame(ttk.LabelFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, text="Manage", **kwargs)
 
-        self._model_list = ScrollableList(self, selectmode=tk.MULTIPLE, height=150)
+        self._model_list = ScrollableList(self, selectmode=tk.SINGLE, height=150)
         self._model_list.pack(fill=tk.BOTH, expand=True)
 
         self._button_frame = tk.Frame(self)
@@ -169,15 +168,37 @@ class ModelManageFrame(ttk.LabelFrame):
         self._model_list.set_values(AppData.models.data.keys())
 
     def _delete_models(self, *args):
-        selected_models = self._model_list.get_cur()
-        if selected_models is None:
+        selection = self._model_list.get_cur()
+        if selection is None:
             tk.messagebox.showerror("Error", "Can't delete nothing...")
         else:
-            for model in selected_models:
-                del AppData.models.data[model]
+            (model,) = selection
+            del AppData.models.data[model]
 
     def _load_models(self, *args):
-        print("LOAD MODELS")
+        file_name = filedialog.askopenfilename(
+            title="Select File",
+            filetypes=(
+                ("dfb files", "*.dfb"),
+                ("all files", "*.*")
+            )
+        )
+        if file_name:
+            with open(file_name, "rb") as fp:
+                AppData.models.data[os.path.basename(file_name)] = pickle.load(fp)
 
     def _save_models(self, *args):
-        print("SAVE MODELS")
+        file_name = filedialog.asksaveasfilename(
+            title="Select File",
+            filetypes=(
+                ("dfb files", "*.dfb"),
+                ("all files", "*.*")
+            )
+        )
+        selection = self._model_list.get_cur()
+        if selection is None:
+            tk.messagebox.showerror("Error", "Can't save nothing...")
+        elif file_name:
+            (model,) = selection
+            with open(file_name, "wb") as fp:
+                pickle.dump(AppData.models.data[model], fp)
