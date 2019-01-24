@@ -1,6 +1,7 @@
 import tkinter as tk
 
 from .tabs import Tabs
+from .data import AppData
 
 
 class App(tk.Frame):
@@ -11,8 +12,15 @@ class App(tk.Frame):
         parent.title("DFB Predict")
         self.pack()
 
-        self._tabs = Tabs(parent)
-        self._tabs.pack(fill=tk.BOTH, expand=True)
+        self._tabs = Tabs(self)
+        self._tabs.pack()
+
+        self.after(50, self._generate_events)
+
+    def _generate_events(self):
+        for event in AppData.gather_events():
+            self.event_generate(event)
+        self.after(50, self._generate_events)
 
     @classmethod
     def run_app(cls):

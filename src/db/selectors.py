@@ -45,6 +45,20 @@ class RangePoint:
     def __str__(self):
         return f"{self.year}{f'/{self.group}' if self.group is not None else ''}"
 
+    def build_filter(self, compare_op: str, *, ignore_groups: bool = False):
+        if not self.is_null():
+            if not self.is_partial() and not ignore_groups:
+                return or_(
+                    getattr(Season.year, f"__{compare_op}t__")(self.year),
+                    and_(
+                        Season.year == self.year,
+                        getattr(Group.order_id, f"__{compare_op}e__")(self.group)
+                    )
+                )
+            elif self.year is not None:
+                return getattr(Season.year, f"__{compare_op}e__")(self.year)
+        return and_()
+
 
 class RangeSelector:
     """Complete selection"""
@@ -99,47 +113,17 @@ class RangeSelector:
         self._start = other._start
         self._end = other._end
 
-    def build_filters(self):
-        """Build a list of filters to match data in timespace."""
-        filters = [
-            Match.is_finished
-        ]
-        if not self._end.is_null():
-            if not self._end.is_partial():
-                filters.append(
-                    or_(
-                        Season.year < self._end.year,
-                        and_(
-                            Season.year == self._end.year,
-                            Group.order_id <= self._end.group
-                        )
-                    ),
-                )
-            elif self._end.year is not None:
-                filters.append(
-                    Season.year <= self._end.year
-                )
-        if not self._start.is_null():
-            if not self._start.is_partial():
-                filters.append(
-                    or_(
-                        Season.year > self._start.year,
-                        and_(
-                            Season.year == self._start.year,
-                            Group.order_id >= self._start.group
-                        )
-                    ),
-                )
-            elif self._start.year is not None:
-                filters.append(
-                    Season.year >= self._start.year
-                )
-        return and_(*filters)
+    def build_filters(self, *, ignore_groups: bool = False):
+        """Build a filter to match data in timespace."""
+        return and_(
+            self._start.build_filter("g", ignore_groups=ignore_groups),
+            self._end.build_filter("l", ignore_groups=ignore_groups)
+        )
 
-    def build_team_query(self) -> Query:
+    def build_team_query(self, *, ignore_groups: bool = False) -> Query:
         """Build a query for Teams with matches in selected timespace."""
-        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(self.build_filters())
+        return Query(Team).join(Team.seasons, Team.match_participations, MatchParticipation.match, Match.group).filter(Match.is_finished, self.build_filters(ignore_groups=ignore_groups))
 
-    def build_match_query(self) -> Query:
+    def build_match_query(self, *, ignore_groups: bool = False) -> Query:
         """Build a query for Matches in selected timespace."""
-        return Query(Match).join(Match.group, Group.season).filter(self.build_filters())
+        return Query(Match).join(Match.group, Group.season).filter(Match.is_finished, self.build_filters(ignore_groups=ignore_groups))

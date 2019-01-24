@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import pickle
 
 import pandas as pd
 import numpy as np
@@ -115,7 +116,7 @@ class PoissonModel(Model, verbose_name="poisson"):
             family=sm.families.Poisson()
         ).fit()
 
-        return features
+        return features, list(goal_data["host"].unique())
 
     def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
         host_goals_avg = self.features.predict(
@@ -147,6 +148,8 @@ class PoissonModel(Model, verbose_name="poisson"):
         )
 
         return PoissonResult(
+            selector=self.selector,
+            model_type=type(self).verbose_name,
             host_name=host_name,
             guest_name=guest_name,
             host_win_propability=np.sum(np.tril(results, -1)),

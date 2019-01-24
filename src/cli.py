@@ -89,8 +89,22 @@ def predict(host, guest, model, start, end):
     with DB.get_session() as session:
         selector, errors = handle_selector(start, end, session)
         team_query = selector.build_team_query()
-        host_candidates = list(team_query.filter(or_(Team.name.contains(host), Team.name.ilike(host))).with_session(session))
-        guest_candidates = list(team_query.filter(or_(Team.name.contains(guest), Team.name.ilike(guest))).with_session(session))
+
+        # Find teams in DB
+        host_candidates = list(team_query.filter(or_(
+            Team.name.contains(host),
+            Team.name.ilike(host),
+            Team.shortname.contains(host),
+            Team.shortname.ilike(host)
+        )).with_session(session))
+        guest_candidates = list(team_query.filter(or_(
+            Team.name.contains(guest),
+            Team.name.ilike(guest),
+            Team.shortname.contains(guest),
+            Team.shortname.ilike(guest)
+        )).with_session(session))
+
+        # Check findings for existence and ambiguity
         if len(host_candidates) > 1:
             errors.append(f"Multiple options for {repr(host)}: {', '.join(str(team) for team in host_candidates)}")
         if len(guest_candidates) > 1:
@@ -99,15 +113,17 @@ def predict(host, guest, model, start, end):
             errors.append(f"Couldn't find team for {repr(host)}.")
         if len(guest_candidates) == 0:
             errors.append(f"Couldn't find team for {repr(guest)}.")
+
+        # Display errors or make prediction
         if len(errors) > 0:
             for error in errors:
                 print("ERR:", error)
             print(f"\nOptions for teams:")
-            print(*["> " + str(team) for team in team_query.with_session(session)], sep="\n")
+            print(*[f'> {team}' for team in team_query.with_session(session)], sep="\n")
         else:
             model = Model.registry[model](selector, session)
-            host_name = host_candidates[0].name
-            guest_name = guest_candidates[0].name
+            host_name = host_candidates[0].shortname
+            guest_name = guest_candidates[0].shortname
             print(model.make_prediction(host_name, guest_name))
 
 

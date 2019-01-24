@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Dict
+import json
 
 import pandas as pd
 import numpy as np
@@ -78,8 +79,7 @@ class DixonColesModel(Model, verbose_name="dixon-coles"):
             min_result.x
         ))
 
-        # print(*[f"{key}: {item}" for key, item in model.items()], sep="\n")
-        return features
+        return features, teams
 
     def make_prediction(self, host_name: str, guest_name: str, max_goals: int = 10) -> PoissonResult:
         team_avgs = [
@@ -103,6 +103,8 @@ class DixonColesModel(Model, verbose_name="dixon-coles"):
         output_matrix[:2, :2] = output_matrix[:2, :2] * correction_matrix
 
         return PoissonResult(
+            selector=self.selector,
+            model_type=type(self).verbose_name,
             host_name=host_name,
             guest_name=guest_name,
             host_win_propability=np.sum(np.tril(output_matrix, -1)),

@@ -17,7 +17,6 @@ class Team(Model):
     name = Column(String)
 
     seasons = relationship("Season", secondary=team_season_association_table, back_populates="teams")
-    # match_participations = relationship("MatchParticipation")
 
     matches = association_proxy("match_participations", "match")
 

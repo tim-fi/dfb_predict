@@ -9,8 +9,8 @@ __all__ = (
 
 class LabeledProgressbar(tk.Frame):
     """Custom widget: progressbar with label on it"""
-    def __init__(self, parent, length=None, mode=None, orient=None):
-        super().__init__(parent)
+    def __init__(self, *args, length=None, mode=None, orient=None, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self._style = ttk.Style(self)
         self._style.layout(
@@ -35,8 +35,8 @@ class LabeledProgressbar(tk.Frame):
             ]
         )
 
-        self._progress = ttk.Progressbar(parent, length=length or 100, mode=mode or "determinate", orient=orient or "horizontal", style="LabeledProgressbar")
-        self._progress.pack(in_=self, fill=tk.X)
+        self._progress = ttk.Progressbar(self, length=length or 100, mode=mode or "determinate", orient=orient or "horizontal", style="LabeledProgressbar")
+        self._progress.pack(fill=tk.X)
 
     def set_label(self, label):
         self._style.configure("LabeledProgressbar", text=label)

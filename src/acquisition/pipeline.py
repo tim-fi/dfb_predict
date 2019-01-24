@@ -23,15 +23,19 @@ pipeline: Pipeline[Model] = Pipeline({
     MatchParticipation: {
         "team": Get("Team") | GetOrCreate(Team, match_targets=["id"]),
         "match_id": Get("MatchID"),
-        "hosted": Get("hosted")
+        "hosted": Get("hosted"),
     },
     Team: {
         "id": Get("TeamId"),
-        "name": Get("TeamName")
+        "name": If(
+            cond=lambda data: "ShortName" in data and data["ShortName"],
+            then=Get("ShortName"),
+            else_=Get("TeamName"),
+        )
     },
     Group: {
         "id": Get("GroupID"),
-        "order_id": Get("GroupOrderID")
+        "order_id": Get("GroupOrderID"),
     },
     Match: {
         "id": Get("MatchID"),
@@ -130,7 +134,9 @@ def get_current_groups_matches() -> List[Tuple[str, str]]:
         data[0]["LeagueName"],
         data[0]["Group"]["GroupOrderID"],
         [
-            (match["Team1"]["TeamName"], match["Team2"]["TeamName"])
+            (
+                match["Team1"].get("ShortName") or match["Team1"]["TeamName"],
+                match["Team2"].get("ShortName") or match["Team2"]["TeamName"])
             for match in data
         ]
     )

@@ -20,7 +20,7 @@ class TestPrediction(unittest.TestCase):
         """>>> Test the Poisson Regression prediction method."""
         with self.DB.get_session() as session:
             model = PoissonModel(RangeSelector(), session)
-        result_obj = model.make_prediction("FC Bayern", "Borussia Dortmund")
+        result_obj = model.make_prediction("FCB", "BVB")
 
         assert all(
             round(actual, 2) == expected
@@ -36,6 +36,6 @@ class TestPrediction(unittest.TestCase):
             model = DixonColesModel(RangeSelector(
                 RangePoint(2016, 30), RangePoint(2016, 34)
             ), session)
-        result_obj = model.make_prediction("FC Bayern", "Borussia Dortmund")
+        result_obj = model.make_prediction("FCB", "BVB")
 
         assert result_obj is not None, "Result didn't compute..."
