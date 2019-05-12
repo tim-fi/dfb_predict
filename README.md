@@ -1,6 +1,6 @@
 This is university project which was worked on by Moritz Kniebel, Vanessa Tsingunidis and myself, in the winter semester 18/19 at the University of Tübingen. As such not all of the work presented here was done by me. I've talked it over with both of them, and they have agreed to me publishing this on my github.
 
-All text in this project, beside the code of course, was to be in german, as we were to be graded on it. I can procide translations if asked, but as of now none have been necessary and as such none exist.
+Most of the text in this project, beside the code of course, was to be in german, as we were to be graded on it. I can procide translations if asked, but as of now none have been necessary and as such none exist.
 
 Only this section and the licences have been added since the completion of the project, and nothing else has been or will be altered, as this is the state of the project it was graded on.
 
