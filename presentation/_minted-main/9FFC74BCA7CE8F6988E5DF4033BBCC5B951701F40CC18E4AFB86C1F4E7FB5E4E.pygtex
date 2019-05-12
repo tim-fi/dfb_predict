@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{Query}\PYG{p}{(}\PYG{n}{Team}\PYG{p}{)}\PYG{o}{.}\PYG{n}{join}\PYG{p}{(}
+    \PYG{n}{Team}\PYG{o}{.}\PYG{n}{seasons}\PYG{p}{,}
+    \PYG{n}{Team}\PYG{o}{.}\PYG{n}{match\PYGZus{}participations}\PYG{p}{,}
+    \PYG{n}{MatchParticipation}\PYG{o}{.}\PYG{n}{match}\PYG{p}{,}
+    \PYG{n}{Match}\PYG{o}{.}\PYG{n}{group}
+\PYG{p}{)}\PYG{o}{.}\PYG{n}{filter}\PYG{p}{(}
+    \PYG{n}{Match}\PYG{o}{.}\PYG{n}{is\PYGZus{}finished}\PYG{p}{,}
+    \PYG{o}{...}
+\PYG{p}{)}
+\end{Verbatim}

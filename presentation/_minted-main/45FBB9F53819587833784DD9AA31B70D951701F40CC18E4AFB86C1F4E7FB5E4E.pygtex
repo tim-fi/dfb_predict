@@ -1,0 +1,9 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{range\PYGZus{}selector} \PYG{o}{=} \PYG{n}{RangeSelector}\PYG{p}{(}
+    \PYG{n}{start}\PYG{o}{=}\PYG{n}{RangePoint}\PYG{p}{(}\PYG{n}{year}\PYG{o}{=}\PYG{l+m+mi}{2016}\PYG{p}{,} \PYG{n}{group}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{),}
+    \PYG{n}{end}\PYG{o}{=}\PYG{n}{RangePoint}\PYG{p}{(}\PYG{n}{year}\PYG{o}{=}\PYG{l+m+mi}{2016}\PYG{p}{,} \PYG{n}{group}\PYG{o}{=}\PYG{l+m+mi}{34}\PYG{p}{)}
+\PYG{p}{)}
+
+\PYG{k}{with} \PYG{n}{DB}\PYG{o}{.}\PYG{n}{get\PYGZus{}session}\PYG{p}{()} \PYG{k}{as} \PYG{n}{session}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{o}{*}\PYG{n}{range\PYGZus{}selector}\PYG{o}{.}\PYG{n}{build\PYGZus{}team\PYGZus{}query}\PYG{p}{()}\PYG{o}{.}\PYG{n}{with\PYGZus{}session}\PYG{p}{(}\PYG{n}{session}\PYG{p}{),} \PYG{n}{sep}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\end{Verbatim}

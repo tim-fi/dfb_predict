@@ -1,0 +1,24 @@
+\frametitle{Beschaffung der Daten: Dataprocessing-Pipeline \tiny{(\texttt{src/acquisition/*})}}
+        \begin{block}{Idee}
+            Beschreiben wir für jedes Feld in den DB-Modellen, durch eine \textit{Konkatenation} von \textit{Transformationen}, wie man von dem Response aus zu dem jeweiligen Wert kommt.
+        \end{block}
+        \begin{exampleblock}{Implementation}
+            \begin{minted}[fontsize=\tiny, autogobble, bgcolor=CodeBackground]{python3}
+                pipeline: Pipeline[Model] = Pipeline({
+                    MatchParticipation: {
+                        "team": Get("Team") | GetOrCreate(Team, match_targets=["id"]),
+                        "match_id": Get("MatchID"),
+                        "hosted": Get("hosted"),
+                    },
+                    Team: {
+                        "id": Get("TeamId"),
+                        "name": If(
+                            cond=lambda data: "ShortName" in data and data["ShortName"],
+                            then=Get("ShortName"),
+                            else_=Get("TeamName"),
+                        )
+                    },
+                    ...
+                })
+            \end{minted}
+        \end{exampleblock}
