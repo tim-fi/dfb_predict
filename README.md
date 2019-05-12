@@ -2,7 +2,7 @@ This is university project which was worked on by Moritz Kniebel, Vanessa Tsingu
 
 All text in this project, beside the code of course, was to be in german, as we were to be graded on it. I can procide translations if asked, but as of now none have been necessary and as such none exist.
 
-Only this section has been added since the completion of the project, and nothing else has been altered or will be, as this is the state of the project we were graded on.
+Only this section and the licences have been added since the completion of the project, and nothing else has been or will be altered, as this is the state of the project it was graded on.
 
 ---
 # WS 2018/2019: Automatisches Wett-System Bundesliga
