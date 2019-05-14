@@ -2,7 +2,7 @@ This is university project which was worked on by Moritz Kniebel, Vanessa Tsingu
 
 Most of the text in this project, beside the code of course, was to be in german, as we were to be graded on it. I can provide translations if asked, but as of now none have been necessary and as such none exist.
 
-This project repository was orignally hosted on a private git remote by the mpg, and has been retroactively migrated to github for public viewing access. As such some things needed altering or adding. Things like this section, the licence, and the files for the project presentation have been added since the completion of the project, nothing else has been or will be altered, as this is the state of the project it was graded on.
+This project repository was orignally hosted on a private git remote by the mpg, and has been retroactively migrated to github for public viewing access. As such some things needed altering or adding. Things like this section, the licence, and the files for the project presentation have been added since the completion of the project, nothing else has been or will be altered, as this is the state of the project it was graded on. Exceptions to this may include alterations related to security issues.
 
 ---
 # WS 2018/2019: Automatisches Wett-System Bundesliga
