@@ -1,4 +1,4 @@
-This is university project which was worked on by Moritz Kniebel, Vanessa Tsingunidis and myself, in the winter semester 18/19 at the University of Tübingen. As such not all of the work presented here was done by me. I've talked it over with both of them, and they have agreed to me publishing this on my github.
+This is university project which was worked on by Moritz Kniebel, Vanessa Tsingunidis and myself, in the winter semester 18/19 at the University of Tübingen. As such not all of the work presented here was done by me. I've talked it over with both of them, and they have agreed to me publishing this on my github. In case you want to contact the other two, please message me. They have stated interest in being publicly related to this project, but I do not wish to publices there contact information without there contact information on my private github account.
 
 Most of the text in this project, beside the code of course, was to be in german, as we were to be graded on it. I can provide translations if asked, but as of now none have been necessary and as such none exist.
 
